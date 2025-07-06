@@ -83,29 +83,6 @@ const CallPage = () => {
             <div className="w-full flex justify-center">
               <div className="w-[420px] h-[260px] bg-gray-300 rounded-2xl flex flex-col items-center justify-center font-bold text-xl text-gray-700 shadow-lg relative">
                 <span>{dummyUsers[0].name}</span>
-                <button
-                  className="absolute top-3 right-3"
-                  onClick={() => toggleUserMic(dummyUsers[0].id)}
-                >
-                  {userMics[dummyUsers[0].id] ? (
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
-                      <path d="M13.5727 6.42725H7.50248H7.22656V10.681L9.70982 13.4155H11.3653L13.5727 10.9848V6.42725Z" fill="white" fill-opacity="0.8" />
-                      <path d="M10.3996 13.0125C12.1527 13.0125 13.5727 11.5691 13.5727 9.78709V5.3522C13.5727 3.57018 12.1527 2.12683 10.3996 2.12683C8.6465 2.12683 7.22656 3.57018 7.22656 5.3522V9.78709C7.22656 11.5691 8.6465 13.0125 10.3996 13.0125Z" stroke="white" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" />
-                      <path d="M4.33008 8.29529V9.66607C4.33008 13.0688 7.05097 15.8346 10.3985 15.8346C13.7461 15.8346 16.467 13.0688 16.467 9.66607V8.29529" stroke="white" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" />
-                      <path d="M10.3984 15.8346V18.2536" stroke="white" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" />
-                    </svg>
-                  ) : (
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
-                      <path d="M16 6.3V6C16 3.79 14.21 2 12 2C9.79 2 8 3.79 8 6V11" stroke="#EB5757" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                      <path d="M9.03906 14.19C9.76906 15 10.8291 15.5 11.9991 15.5C14.2091 15.5 15.9991 13.71 15.9991 11.5V11" stroke="#EB5757" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                      <path d="M6.7793 16.95C8.1493 18.22 9.9793 19 11.9993 19C16.2193 19 19.6493 15.57 19.6493 11.35V9.65002" stroke="#EB5757" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                      <path d="M4.34961 9.65002V11.35C4.34961 12.41 4.55961 13.41 4.94961 14.33" stroke="#EB5757" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                      <path d="M20.0697 2.83997L3.92969 18.99" stroke="#EB5757" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                      <path d="M11 3V6" stroke="#EB5757" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                      <path d="M12 19V22" stroke="#EB5757" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                    </svg>
-                  )}
-                </button>
               </div>
             </div>
             {/* باقي المستخدمين في شبكة grid */}
@@ -117,7 +94,7 @@ const CallPage = () => {
                 >
                   <span>{user.name}</span>
                   <button
-                    className="absolute top-2 right-2"
+                    className="absolute bottom-2 right-2"
                     onClick={() => toggleUserMic(user.id)}
                   >
                     {userMics[user.id] ? (

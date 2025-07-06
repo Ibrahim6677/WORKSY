@@ -145,7 +145,7 @@ export default function ScheduleCalendar({ date }: ScheduleCalendarProps) {
   ];
 
   return (
-    <div className="h-[80vh] w-full bg-white rounded-none shadow-none p-0 relative">
+    <div className="w-full bg-white rounded-none shadow-none p-0 relative">
       <style>{`
         .rbc-event-label, .rbc-slot-label {
           display: none !important;
