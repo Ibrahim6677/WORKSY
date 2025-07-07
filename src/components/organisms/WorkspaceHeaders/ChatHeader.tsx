@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { InputSearch } from "../../atoms/input/Input";
 
 type WorkspaceHeaderProps = {
@@ -9,6 +9,8 @@ type WorkspaceHeaderProps = {
 const WorkspaceHeader = ({ onOpenThreadSidebar }: WorkspaceHeaderProps) => {
   const [inCall, setInCall] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+  const isInCallPage = location.pathname.includes('/workspace/channels/call');
   return (
     <div className="flex items-center justify-between px-4 py-3 bg-white border-b border-gray-100">
       {/* Left: Workspace and Channel */}
@@ -22,12 +24,12 @@ const WorkspaceHeader = ({ onOpenThreadSidebar }: WorkspaceHeaderProps) => {
       <div className="flex items-center gap-3">
         {/* Call Icon */}
         {
-          !inCall && (
+          !inCall && !isInCallPage && (
             <>
             <button
               className="flex items-center justify-center w-7 h-7 rounded hover:bg-gray-100 transition"
               title="Start call"
-              onClick={() => navigate('/workspace/channels/call')}
+              onClick={() => { setInCall(true); navigate('/workspace/channels/call'); }}
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -47,6 +49,7 @@ const WorkspaceHeader = ({ onOpenThreadSidebar }: WorkspaceHeaderProps) => {
             <button
               className="flex items-center justify-center w-7 h-7 rounded hover:bg-gray-100 transition"
               title="Start call"
+              onClick={() => setInCall(true)}
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -58,8 +61,8 @@ const WorkspaceHeader = ({ onOpenThreadSidebar }: WorkspaceHeaderProps) => {
                 <path
                   d="M19.3789 16.0703C18.6966 15.3828 17.044 14.3795 16.2422 13.9751C15.198 13.4492 15.1121 13.4062 14.2914 14.016C13.744 14.4229 13.38 14.7864 12.7394 14.6498C12.0987 14.5131 10.7065 13.7427 9.4875 12.5275C8.26848 11.3124 7.45336 9.87979 7.31629 9.24127C7.17922 8.60276 7.54875 8.24311 7.9518 7.6944C8.51985 6.92096 8.47688 6.79206 7.99133 5.74792C7.61277 4.93581 6.58024 3.2987 5.89016 2.61979C5.15195 1.89061 5.15196 2.01952 4.67629 2.21717C4.28903 2.38007 3.91751 2.57813 3.56641 2.80885C2.87891 3.26561 2.49735 3.64502 2.23051 4.21522C1.96367 4.78542 1.84379 6.12217 3.2218 8.62553C4.59981 11.1289 5.5666 12.4089 7.56766 14.4044C9.56871 16.3999 11.1074 17.4728 13.3568 18.7344C16.1395 20.2928 17.2068 19.989 17.7788 19.7226C18.3507 19.4562 18.7318 19.0781 19.1894 18.3906C19.4207 18.0401 19.6192 17.669 19.7824 17.282C19.9805 16.8081 20.1094 16.8081 19.3789 16.0703Z"
                   stroke="black"
-                  stroke-width="1.5"
-                  stroke-miterlimit="10"
+                  strokeWidth="1.5"
+                  strokeMiterlimit="10"
                 />
               </svg>
             </button>

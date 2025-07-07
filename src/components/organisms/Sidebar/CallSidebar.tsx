@@ -95,7 +95,7 @@ const CallSidebar: React.FC<CallSidebarProps> = ({ showChatSidebar, setShowChatS
             Add members {addIcon}
           </button>
         </div>
-        <ul className="space-y-2 mb-2">
+        <ul className="space-y-2 mb-2 overflow-y-auto" style={{ maxHeight: '260px' }}>
           {dummyMembers.map((name, idx) => {
             // افتراضي: صورة أو دائرة بحروف الاسم
             const avatarUrl = defaultAvatars[idx % defaultAvatars.length];

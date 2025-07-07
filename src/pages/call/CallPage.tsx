@@ -26,6 +26,9 @@ const dummyMembers = [
   "Safiya Fareena",
   "Robert Allen",
   "Scott Franklin",
+  "Scott Franklin",
+  "Scott Franklin",
+  "Scott Franklin",
   "Muhammed",
 ];
 
@@ -69,7 +72,7 @@ const CallPage = () => {
 
   return (
     <CallLayout>
-      <div className="flex w-full h-screen">
+      <div className="flex w-full h-[92vh]">
         {/* Main Video Area */}
         <div className="flex-1 flex flex-col items-center justify-between px-2 py-4">
           {/* شبكة الفيديو باستخدام grid */}
