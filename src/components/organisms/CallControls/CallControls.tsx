@@ -6,9 +6,10 @@ type CallControlsProps = {
   onToggleMic: () => void;
   onToggleCam: () => void;
   onEndCall: () => void;
+  onToggleChat: () => void;
 };
 
-const CallControls: React.FC<CallControlsProps> = ({ isMicOn, isCamOn, onToggleMic, onToggleCam, onEndCall }) => {
+const CallControls: React.FC<CallControlsProps> = ({ isMicOn, isCamOn, onToggleMic, onToggleCam, onEndCall, onToggleChat }) => {
   return (
     <div className="w-full flex items-center justify-center gap-6 py-4 bg-[#FBFBFB] border border-[#EDF0F6] backdrop-blur-[8px]">
       {/* زر المايك */}
@@ -76,7 +77,7 @@ const CallControls: React.FC<CallControlsProps> = ({ isMicOn, isCamOn, onToggleM
 </svg>
       </button>
       {/* Chat */}
-      <button className='w-12 h-12 flex items-center cursor-pointer justify-center rounded-full transition border-2 bg-[#D0BDF5] border-[#D0BDF5]'>
+      <button className='w-12 h-12 flex items-center cursor-pointer justify-center rounded-full transition border-2 bg-[#D0BDF5] border-[#D0BDF5]' onClick={onToggleChat}>
       <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
         <path d="M7.00386 15.8347H6.60723C3.43418 15.8347 1.84766 15.0283 1.84766 10.9966V6.96489C1.84766 3.73952 3.43418 2.12683 6.60723 2.12683H12.9533C16.1264 2.12683 17.7129 3.73952 17.7129 6.96489V10.9966C17.7129 14.222 16.1264 15.8347 12.9533 15.8347H12.5567C12.3108 15.8347 12.0728 15.9556 11.9221 16.1572L10.7322 17.7699C10.2086 18.4795 9.35191 18.4795 8.82836 17.7699L7.63847 16.1572C7.51155 15.9798 7.21804 15.8347 7.00386 15.8347Z" stroke="#6629DE" stroke-width="2.25" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round" />
         <path d="M12.9489 9.38401H12.956" stroke="#6629DE" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
