@@ -1,8 +1,14 @@
+import React, { Suspense, lazy } from "react";
 import { useState } from "react";
 import { addDays, subDays, format } from "date-fns";
 import ScheduleCalendar from "./ScheduleCalendar";
 import CalendarSidebar from "../../components/organisms/Sidebar/CalendarSidebar";
 import CalendarHeader from "../../components/organisms/WorkspaceHeaders/CalendarHeader";
+import LoadingPage from "../loadingPage";
+
+const ScheduleCalendarComponent = lazy(() => import("./ScheduleCalendar"));
+const CalendarSidebarComponent = lazy(() => import("../../components/organisms/Sidebar/CalendarSidebar"));
+const CalendarHeaderComponent = lazy(() => import("../../components/organisms/WorkspaceHeaders/CalendarHeader"));
 
 export default function CalendarPage() {
   // Start with the date from the design
@@ -17,8 +23,7 @@ export default function CalendarPage() {
   };
 
   return (
-    <>
-      <CalendarHeader />
+    <Suspense fallback={<LoadingPage />}>
       <div className="flex min-h-screen bg-gray-50">
         <div className="flex-1 p-6">
           <div className="flex items-center justify-between mb-4">
@@ -50,10 +55,10 @@ export default function CalendarPage() {
               </button>
             </div>
           </div>
-          <ScheduleCalendar date={date} />
+          <ScheduleCalendarComponent date={date} />
         </div>
-        <CalendarSidebar />
+        <CalendarSidebarComponent />
       </div>
-    </>
+    </Suspense>
   );
 }

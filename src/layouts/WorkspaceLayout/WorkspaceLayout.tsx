@@ -1,7 +1,9 @@
+import React, { Suspense, lazy } from "react";
 import { Outlet } from "react-router-dom";
 import MainSidebar from "../../components/organisms/Sidebar/MainSidebar";
+import LoadingPage from "../../pages/loadingPage";
 
-export default function WorkspaceLayout() {
+const WorkspaceLayout = () => {
   return (
     <div className="flex min-h-screen">
       <aside className="fixed top-0 left-0 h-screen w-20 bg-[#F6F1FE]">
@@ -12,4 +14,6 @@ export default function WorkspaceLayout() {
       </main>
     </div>
   );
-}
+};
+
+export default WorkspaceLayout;

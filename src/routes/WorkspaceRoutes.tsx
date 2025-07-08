@@ -1,47 +1,50 @@
 // import ProtectedRoute from "./ProtectedRoute";
-import WorkspaceLayout from "../layouts/WorkspaceLayout/WorkspaceLayout";
-import WorkspaceHome from "../pages/workspace/WorkspaceHome";
-import CreateWorkspace from "../pages/workspace/createworkspace/CreateWorkspace";
-import FileDetails from "../components/organisms/File/FileDetails";
-import CalenderPage from "../pages/calendar/CalendarPage";
-import SettingsLayout from "../layouts/SettingsLayout/SettingsLayout";
-import Profile from "../pages/settings/Profile";
+import React, { Suspense, lazy } from "react";
+import LoadingPage from "../pages/loadingPage";
 import type { RouteObject } from "react-router-dom";
-import ChannelsPage from "../pages/channels/ChannelsPage";
-import ChannelsLayout from "../layouts/WorkspaceLayout/ChannelsLayout";
-import Notification from "../pages/settings/Notification";
-import Privacy from "../pages/settings/Privacy";
-import ChatLayout from "../layouts/ChatLayout/ChatLayout";
-import CallPage from "../pages/call/CallPage";
+
+const WorkspaceHome = lazy(() => import("../pages/workspace/WorkspaceHome"));
+const CreateWorkspace = lazy(() => import("../pages/workspace/createworkspace/CreateWorkspace"));
+const FileDetails = lazy(() => import("../components/organisms/File/FileDetails"));
+const CalenderPage = lazy(() => import("../pages/calendar/CalendarPage"));
+const SettingsLayout = lazy(() => import("../layouts/SettingsLayout/SettingsLayout"));
+const Profile = lazy(() => import("../pages/settings/Profile"));
+const ChannelsPage = lazy(() => import("../pages/channels/ChannelsPage"));
+const ChannelsLayout = lazy(() => import("../layouts/WorkspaceLayout/ChannelsLayout"));
+const Notification = lazy(() => import("../pages/settings/Notification"));
+const Privacy = lazy(() => import("../pages/settings/Privacy"));
+const ChatLayout = lazy(() => import("../layouts/ChatLayout/ChatLayout"));
+const CallPage = lazy(() => import("../pages/call/CallPage"));
+const WorkspaceLayout = lazy(() => import("../layouts/WorkspaceLayout/WorkspaceLayout"));
 
 const WorkspaceRoutes: RouteObject = {
   // element: <ProtectedRoute />,
   children: [
-    { path: "/workspace", element: <WorkspaceHome /> },
-    { path: "/create-workspace", element: <CreateWorkspace /> },
+    { path: "/workspace", element: <Suspense fallback={<LoadingPage />}><WorkspaceHome /></Suspense> },
+    { path: "/create-workspace", element: <Suspense fallback={<LoadingPage />}><CreateWorkspace /></Suspense> },
     {
       path: "/workspace",
-      element: <WorkspaceLayout />,
+      element: <Suspense fallback={<LoadingPage />}><WorkspaceLayout /></Suspense>,
       children: [
-        { path: "files", element: <FileDetails /> },
-        { path: "calendar", element: <CalenderPage /> },
-        { path: "channels", element: <ChannelsPage /> },
+        { path: "files", element: <Suspense fallback={<LoadingPage />}><FileDetails /></Suspense> },
+        { path: "calendar", element: <Suspense fallback={<LoadingPage />}><CalenderPage /></Suspense> },
+        { path: "channels", element: <Suspense fallback={<LoadingPage />}><ChannelsPage /></Suspense> },
         {
           path: "channels",
-          element: <ChannelsLayout />,
+          element: <Suspense fallback={<LoadingPage />}><ChannelsLayout /></Suspense>,
           children: [
-            { path: "chat", element: <ChatLayout /> },
-            { path: "call", element: <CallPage /> }
+            { path: "chat", element: <Suspense fallback={<LoadingPage />}><ChatLayout /></Suspense> },
+            { path: "call", element: <Suspense fallback={<LoadingPage />}><CallPage /></Suspense> }
           ]
         },
         {
           path: "settings",
-          element: <SettingsLayout />,
+          element: <Suspense fallback={<LoadingPage />}><SettingsLayout /></Suspense>,
           children: [
-            { index: true, element: <Profile /> },
-            { path: "profile", element: <Profile /> },
-            { path: "notifications", element: <Notification /> },
-            { path: "privacy", element: <Privacy /> },
+            { index: true, element: <Suspense fallback={<LoadingPage />}><Profile /></Suspense> },
+            { path: "profile", element: <Suspense fallback={<LoadingPage />}><Profile /></Suspense> },
+            { path: "notifications", element: <Suspense fallback={<LoadingPage />}><Notification /></Suspense> },
+            { path: "privacy", element: <Suspense fallback={<LoadingPage />}><Privacy /></Suspense> },
             { path: "appearance", element: <div>appearance</div> },
             { path: "overview", element: <div>overview</div> },
             { path: "members", element: <div>members</div> },
