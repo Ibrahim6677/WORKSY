@@ -1,14 +1,24 @@
 import React, { useRef, useState } from "react";
+import { useDispatch } from "react-redux";
 import imgLogin from "../../assets/images/Delivery _ order, account, transportation, subway, box, shopping.png";
 import logo from "../../assets/images/Vector1.svg";
 import { useNavigate, useLocation } from "react-router-dom";
+import { login as loginAction } from "../../features/auth/authSlice";
+import * as authApi from "../../services/api/auth/authApi";
 
 const Verify = () => {
+  const dispatch = useDispatch();
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const inputsRef = useRef<(HTMLInputElement | null)[]>([]);
   const navigate = useNavigate();
   const location = useLocation();
   const from = location.state?.from; // "login" | "register" | "forget"
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [resendLoading, setResendLoading] = useState(false);
+
+  const email = location.state?.email;
+  const sessionToken = location.state?.sessionToken;
 
   const handleChange = (index: number, value: string) => {
     if (!/^[0-9]?$/.test(value)) return;
@@ -28,27 +38,51 @@ const Verify = () => {
 
   const code = otp.join("");
 
-  const handleVerify = () => {
-    if (code.length !== 6) {
-      alert("من فضلك ادخل الكود كاملًا.");
+  const handleResendVerification = async () => {
+    if (!email) {
+      setError("البريد الإلكتروني غير متوفر");
       return;
     }
+    setResendLoading(true);
+    setError(null);
+    try {
+      await authApi.resendVerificationEmail(email);
+      alert("تم إرسال رمز التحقق مرة أخرى");
+    } catch (err: any) {
+      setError(err.response?.data?.message || "فشل إعادة إرسال رمز التحقق");
+    } finally {
+      setResendLoading(false);
+    }
+  };
 
-    switch (from) {
-      case "login":
-        alert(`تسجيل الدخول بكود: ${code}`);
+  const handleVerify = async () => {
+    if (code.length !== 6) {
+      alert("من فضلك ادخل الكود كاملاً.");
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    try {
+      if (from === "login") {
+        // هنا تستخدم completeLogin
+        const res = await authApi.completeLogin({ email, sessionToken, otp: code });
+        // res.token ← هذا هو accessToken النهائي
+        localStorage.setItem("accessToken", res.token);
+        dispatch(loginAction());
         navigate("/workspace");
-        break;
-      case "register":
-        alert(`تأكيد التسجيل بكود: ${code}`);
-        navigate("/workspace");
-        break;
-      case "forget":
-        alert(`استرجاع كلمة المرور بكود: ${code}`);
-        navigate("/reset-password");
-        break;
-      default:
-        alert("حدث خطأ: لم يتم تحديد نوع التحقق.");
+      } else if (from === "register") {
+        await authApi.verifyEmail({ email, token: code });
+        navigate("/login");
+      } else if (from === "forget-password") {
+        await authApi.verifyResetPin({ email, pin: code });
+        navigate("/reset-password", { state: { email, token: code } });
+      } else {
+        setError("حدث خطأ: لم يتم تحديد نوع التحقق.");
+      }
+    } catch (err: any) {
+      setError(err.response?.data?.message || "فشل التحقق");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -83,11 +117,22 @@ const Verify = () => {
         </div>
         <button
           onClick={handleVerify}
-          disabled={code.length !== 6 || otp.includes("")}
+          disabled={loading || code.length !== 6 || otp.includes("")}
           className="w-full max-w-xs py-3 rounded-lg bg-primary-500 text-white font-semibold text-lg shadow-md bg-[#6334FF] hover:bg-[#5026E4] transition-all disabled:bg-gray-300 disabled:cursor-not-allowed"
         >
-          تحقق
+          {loading ? "...جاري التحقق" : "تحقق"}
         </button>
+        
+        
+          <button
+            onClick={handleResendVerification}
+            disabled={resendLoading}
+            className="w-full max-w-xs py-2 mt-2 rounded-lg border border-[#6334FF] text-[#6334FF] font-semibold text-sm hover:bg-[#6334FF] hover:text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {resendLoading ? "...جاري الإرسال" : "إعادة إرسال رمز التحقق"}
+          </button>
+        
+        {error && <div className="text-red-500 text-sm mt-2">{error}</div>}
       </div>
       <div className="hidden lg:block w-full max-w-sm">
         <img src={imgLogin} className="w-full h-auto object-contain" alt="Login Illustration" />

@@ -1,14 +1,28 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import imgLogin from "../../assets/images/Delivery _ order, account, transportation, subway, box, shopping.png";
 import logo from "../../assets/images/Vector1.svg";
 import Input, { InputSubmit } from "../../components/atoms/input/Input";
+import * as authApi from "../../services/api/auth/authApi";
 
 
 const ForgetPassword = () => {
   const navigate = useNavigate();
-  const handleSubmit = (e: React.FormEvent) => {
+  const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    navigate("/verify", { state: { from: "forget-password" } });
+    setLoading(true);
+    setError(null);
+    try {
+      await authApi.requestResetPin({ email });
+      navigate("/verify", { state: { from: "forget-password", email } });
+    } catch (err: any) {
+      setError(err.response?.data?.message || "Something went wrong");
+    } finally {
+      setLoading(false);
+    }
   };
   return (
     <div className="flex flex-col lg:flex-row items-center justify-center w-full min-h-screen px-4 py-8 gap-8">
@@ -37,15 +51,16 @@ const ForgetPassword = () => {
               type="email"
               name="email"
               placeholder="name@work.com"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
             />
-            <p className="text-sm text-[#a38bd2] underline mt-2 text-left">
-              Forget your password?
-            </p>
+            {error && <div className="text-red-500 text-sm mt-1">{error}</div>}
             <InputSubmit
               type="submit"
-              value="Send New Password"
+              value={loading ? "Loading..." : "Send New Password"}
               to="/reset-password"
               className="bg-[#6629DE] text-white rounded-2xl w-full mt-4 py-3 cursor-pointer hover:opacity-90 transition duration-300"
+              disabled={loading}
             />
           </form>
         </section>

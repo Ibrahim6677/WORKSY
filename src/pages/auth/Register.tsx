@@ -1,11 +1,13 @@
 import { Link, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import imgLogin from "../../assets/images/Delivery _ order, account, transportation, subway, box, shopping.png";
 import logo from "../../assets/images/Vector1.svg";
 import googleIcon from "../../assets/images/Group.svg";
 import micIcon from "../../assets/images/Group9.svg";
 import Input, { InputSubmit } from "../../components/atoms/input/Input";
 import * as authApi from "../../services/api/auth/authApi";
+import { useAuth } from "../../hooks/useAuth/useAuth";
+import { loginWithGoogle } from "../../services/api/auth/authApi";
 
 const Register = () => {
   const navigate = useNavigate();
@@ -15,9 +17,24 @@ const Register = () => {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { isAuthenticated } = useAuth();
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate("/workspace")
+    }
+  }, [isAuthenticated, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!userName || !email || !password) {
+      setError("كل الحقول مطلوبة");
+      return;
+    }
+    if (!email.includes("@")) {
+      setError("صيغة الإيميل غير صحيحة");
+      return;
+    }
     setLoading(true);
     setError(null);
 
@@ -27,7 +44,7 @@ const Register = () => {
         email,
         password
       });
-      navigate("/verify", { state: { from: "register" } });
+      navigate("/verify", { state: { from: "register", email } });
     } catch (err: any) {
       setError(err.response?.data?.message || "Registration failed");
     } finally {
@@ -54,7 +71,10 @@ const Register = () => {
           </p>
 
           <div className="flex flex-col items-center">
-            <button className="rounded-[49px] border border-[#E5E5E5] w-full h-[50px] bg-white py-3 px-6 flex items-center justify-center gap-2 text-black hover:shadow-md mb-3">
+            <button
+              className="rounded-[49px] border border-[#E5E5E5] w-full h-[50px] bg-white py-3 px-6 flex items-center justify-center gap-2 text-black hover:shadow-md mb-3"
+              onClick={loginWithGoogle}
+            >
               <img src={googleIcon} alt="Google" />
               <span className="text-[#444] text-lg font-medium">
                 Sign In With Google

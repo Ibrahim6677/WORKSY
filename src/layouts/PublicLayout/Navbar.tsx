@@ -2,10 +2,12 @@ import { useState, useEffect } from "react";
 import logo from "../../assets/images/Vector1.svg";
 import { Link, NavLink } from "react-router-dom";
 import {BottomLink, BottomMenuLink} from "../../components/atoms/Bottom/BottomLink";
+import { useAuth } from "../../hooks/useAuth/useAuth";
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const { isAuthenticated, user } = useAuth();
   useEffect(() => {
     const handleScroll = () => {
       const isScrolled = window.scrollY >= 500;
@@ -82,13 +84,25 @@ export default function Navbar() {
 
         {/* Desktop Actions */}
         <div className="hidden lg:flex items-center space-x-3 xl:space-x-4">
-          <BottomLink to="/login" variant="outline" scrolled={scrolled}>
-            Sign in
-          </BottomLink>
-
-          <BottomLink to="/workspace" variant="filled" scrolled={scrolled}>
-            Get Started
-          </BottomLink>
+          {!isAuthenticated ? (
+            <>
+              <BottomLink to="/login" variant="outline" scrolled={scrolled}>
+                Sign in
+              </BottomLink>
+              <BottomLink to="/workspace" variant="filled" scrolled={scrolled}>
+                Get Started
+              </BottomLink>
+            </>
+          ) : (
+            <div className="flex items-center gap-2">
+              <img
+                src={user?.avatar || '/path/to/default-avatar.png'}
+                alt="User Avatar"
+                className="w-10 h-10 rounded-full object-cover border"
+              />
+              {/* ممكن تضيف اسم المستخدم أو قائمة منسدلة هنا */}
+            </div>
+          )}
         </div>
 
         {/* Mobile Menu Button */}
@@ -153,12 +167,25 @@ export default function Navbar() {
 
             {/* Action Buttons */}
             <div className="mt-auto mb-8 space-y-4">
-              <BottomMenuLink to="/login" variant="outline">
-                Sign in
-              </BottomMenuLink>
-              <BottomMenuLink to="/workspace" variant="filled">
-                Get Started
-              </BottomMenuLink>
+              {!isAuthenticated ? (
+                <>
+                  <BottomMenuLink to="/login" variant="outline">
+                    Sign in
+                  </BottomMenuLink>
+                  <BottomMenuLink to="/workspace" variant="filled">
+                    Get Started
+                  </BottomMenuLink>
+                </>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <img
+                    src={user?.avatar || '/path/to/default-avatar.png'}
+                    alt="User Avatar"
+                    className="w-10 h-10 rounded-full object-cover border"
+                  />
+                  {/* ممكن تضيف اسم المستخدم أو قائمة منسدلة هنا */}
+                </div>
+              )}
             </div>
           </div>
         </div>

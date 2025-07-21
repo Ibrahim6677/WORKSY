@@ -1,5 +1,4 @@
 import { useState } from "react";
-import SettingHeader from "../../components/organisms/WorkspaceHeaders/SettingHeader";
 import { InputProfile } from "../../components/atoms/input/Input";
 
 export default function Profile() {
@@ -45,8 +44,6 @@ export default function Profile() {
   };
 
   return (
-    <>
-      <SettingHeader />
       <div className="max-w-full mx-auto p-6 bg-white rounded-md shadow-sm">
         <h2 className="text-xl font-semibold mb-2">User Profile</h2>
         <hr className="mb-6 relative top-0 -left-2 text-[#D0D0D0] w-30" />
@@ -67,10 +64,10 @@ export default function Profile() {
             </div>
           </div>
           <div className="flex space-x-2 mt-4 sm:mt-0">
-            <button className="p-4 text-white bg-[#6629DE] hover:bg-[#6529dedf] mr-10 rounded-lg font-bold leading-5 text-sm cursor-pointer">
+            <button className="p-4 text-white bg-[#6629DE] hover:bg-[#6529dedf] mr-10 rounded-lg font-bold leading-5 text-xs md:text-sm cursor-pointer">
               Upload New Photo
             </button>
-            <button className="py-4 px-10 border border-[#6629DE] text-[#6629DE] hover:bg-purple-50 font-bold rounded-lg text-sm cursor-pointer">
+            <button className="py-4 px-10 border border-[#6629DE] text-[#6629DE] hover:bg-purple-50 font-bold rounded-lg text-xs md:text-sm cursor-pointer">
               Delete
             </button>
           </div>
@@ -205,6 +202,5 @@ export default function Profile() {
           </div>
         </form>
       </div>
-    </>
   );
 }

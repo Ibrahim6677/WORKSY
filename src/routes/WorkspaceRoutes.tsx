@@ -1,5 +1,5 @@
 // import ProtectedRoute from "./ProtectedRoute";
-import React, { Suspense, lazy } from "react";
+import { Suspense, lazy } from "react";
 import LoadingPage from "../pages/loadingPage";
 import type { RouteObject } from "react-router-dom";
 

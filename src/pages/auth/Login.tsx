@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { login as loginAction } from "../../features/auth/authSlice";
 import imgLogin from "../../assets/images/Delivery _ order, account, transportation, subway, box, shopping.png";
 import logo from "../../assets/images/Vector1.svg";
@@ -8,6 +8,8 @@ import googleIcon from "../../assets/images/Group.svg";
 import micIcon from "../../assets/images/Group9.svg";
 import Input, { InputSubmit } from "../../components/atoms/input/Input";
 import * as authApi from "../../services/api/auth/authApi";
+// import { useAuth } from "../../hooks/useAuth/useAuth";
+import { loginWithGoogle } from "../../services/api/auth/authApi";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -17,16 +19,24 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // const { isAuthenticated } = useAuth();
+  
+
+  // useEffect(() => {
+  //   if (isAuthenticated) {
+  //     navigate("/workspace")
+  //   }
+  // }, [isAuthenticated, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
     try {
+      // backend سيرجع sessionToken فقط
       const res = await authApi.login({ email, password });
-      localStorage.setItem("accessToken", res.token);
-      dispatch(loginAction());
-      navigate("/verify", { state: { from: "login" } });
+      // res.sessionToken
+      navigate("/verify", { state: { from: "login", email, sessionToken: res.sessionToken } });
     } catch (err: any) {
       setError(err.response?.data?.message || "Login failed");
     } finally {
@@ -100,7 +110,10 @@ const Login = () => {
           </div>
 
           <div className="flex flex-col items-center">
-            <button className="flex items-center justify-center gap-2 border border-[#E5E5E5] rounded-full w-[90%] sm:w-[300px] h-[50px] bg-white mb-4 hover:shadow-md">
+            <button
+              className="flex items-center justify-center gap-2 border border-[#E5E5E5] rounded-full w-[90%] sm:w-[300px] h-[50px] bg-white mb-4 hover:shadow-md"
+              onClick={loginWithGoogle}
+            >
               <img src={googleIcon} alt="" />
               <span className="text-[#444] text-sm font-medium">
                 Sign In With Google

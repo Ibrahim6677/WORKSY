@@ -3,21 +3,36 @@ import imgLogin from "../../assets/images/Delivery _ order, account, transportat
 import logo from "../../assets/images/Vector1.svg";
 import Input, { InputSubmit } from "../../components/atoms/input/Input";
 import { useState } from "react";
+import * as authApi from "../../services/api/auth/authApi";
+import { useLocation } from "react-router-dom";
 
 const ResetPassword = () => {
   const navigate = useNavigate();
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const location = useLocation();
+  const [password, setPassword] = useState<string>("");
+  const [confirmPassword, setConfirmPassword] = useState<string>("");
+  const [error, setError] = useState<string>("");
+  const [loading, setLoading] = useState(false);
+  const email = location.state?.email;
+  const token = location.state?.token; // أو حسب ما يرسله backend
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     if (password !== confirmPassword) {
       setError("Passwords do not match");
       return;
     }
-    navigate("/login");
+    setLoading(true);
+    setError("");
+    try {
+      await authApi.resetPassword({ token, password });
+      navigate("/login");
+    } catch (err: any) {
+      setError(err.response?.data?.message || "Something went wrong");
+    } finally {
+      setLoading(false);
+    }
   };
-  const [password, setPassword] = useState<string>("");
-  const [confirmPassword, setConfirmPassword] = useState<string>("");
-  const [error, setError] = useState<string>("");
 
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -81,8 +96,9 @@ const ResetPassword = () => {
             {error && <p className="text-red-500 text-sm">{error}</p>}
             <InputSubmit
               type="submit"
-              value="Update Password"
+              value={loading ? "Loading..." : "Update Password"}
               className="bg-[#6629DE] text-white rounded-2xl w-full mt-4 py-3 cursor-pointer hover:opacity-90 transition duration-300"
+              disabled={loading}
             />
           </form>
         </section>

@@ -6,7 +6,7 @@ import {
   FaHashtag,
   FaPlus,
 } from "react-icons/fa";
-import { Link } from "react-router-dom";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 
 const channels = [
   { name: "General", path: "/workspace/channels/chat" },
@@ -24,7 +24,8 @@ const directMessages = [
   },
 ];
 
-export default function ChannelsSidebar() {
+export default function ChannelsSidebar({ onNavigate }: { onNavigate?: () => void }) {
+  const navigate = useNavigate();
   const [channelsOpen, setChannelsOpen] = useState(true);
   const [dmOpen, setDmOpen] = useState(true);
   const [selected, setSelected] = useState<string>("General");
@@ -32,19 +33,27 @@ export default function ChannelsSidebar() {
   return (
     <aside className="w-64 h-screen flex flex-col border-r text-black border-gray-200 bg-[#F6F2FD] relative">
       {/* Search */}
-      <Link
+      <NavLink
         to="#"
-        onClick={() => setSelected("Search")}
-        className={`flex items-center gap-2 px-3 font-bold mt-3 py-2 hover:bg-[#ede7fa] rounded transition ${selected === "Search" ? "text-[#6629DE]" : ""}`}
+        onClick={e => {
+          if (onNavigate) {
+            e.preventDefault();
+            onNavigate();
+            navigate("#");
+          }
+        }}
+        className={({ isActive }) =>
+          `hidden md:flex items-center gap-2 px-4 font-bold mt-3 py-2 hover:bg-[#ede7fa] rounded transition ${isActive ? "text-[#6629DE]" : ""}`
+        }
       >
         <FaSearch className="text-sm" />
         <span className="text-sm font-semibold">Search</span>
-      </Link>
+      </NavLink>
       {/* Channels */}
-      <div className="">
+      <div className="mt-4">
         <button
           onClick={() => setChannelsOpen((v) => !v)}
-          className="flex items-center w-full px-3 py-2 gap-2  font-bold hover:bg-[#ede7fa] rounded transition text-sm"
+          className="flex items-center w-full px-4 py-2 gap-2 font-bold hover:bg-[#ede7fa] rounded transition text-sm"
         >
           {channelsOpen ? (
             <FaChevronDown className="text-sm" />
@@ -54,17 +63,25 @@ export default function ChannelsSidebar() {
           <span>Channels</span>
         </button>
         {channelsOpen && (
-          <div className="pl-7">
+          <div className="pl-6">
             {channels.map((ch) => (
-              <Link
+              <NavLink
                 to={ch.path}
                 key={ch.name}
-                onClick={() => setSelected(ch.name)}
-                className={`flex items-center gap-2 py-1 text-sm cursor-pointer ${selected === ch.name ? "text-[#6629DE] font-bold" : ""}`}
+                onClick={e => {
+                  if (onNavigate) {
+                    e.preventDefault();
+                    onNavigate();
+                    navigate(ch.path);
+                  }
+                }}
+                className={({ isActive }) =>
+                  `flex items-center gap-2 py-1 text-sm cursor-pointer px-2 rounded ${isActive ? "text-[#6629DE] font-bold bg-[#ede7fa]" : "hover:bg-[#f3eaff]"}`
+                }
               >
                 <FaHashtag className="text-sm" />
                 <span>{ch.name}</span>
-              </Link>
+              </NavLink>
             ))}
             <button className="flex items-center gap-2 text-sm text-[#6629DE] mt-2 hover:underline">
               <FaPlus /> Add channel
@@ -73,10 +90,10 @@ export default function ChannelsSidebar() {
         )}
       </div>
       {/* Direct Messages */}
-      <div className="mt-3">
+      <div className="mt-6">
         <button
           onClick={() => setDmOpen((v) => !v)}
-          className="flex items-center w-full px-3 py-2 gap-2  font-bold hover:bg-[#ede7fa] rounded transition text-sm"
+          className="flex items-center w-full px-4 py-2 gap-2 font-bold hover:bg-[#ede7fa] rounded transition text-sm"
         >
           {dmOpen ? (
             <FaChevronDown className="text-sm" />

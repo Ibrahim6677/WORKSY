@@ -11,7 +11,7 @@ import {
 import logo from "../../../assets/images/Vector1.svg";
 
 const navItems = [
-  { label: "Home", icon: <Home size={18} />, to: "/workspace/home" },
+  { label: "Home", icon: <Home size={18} />, to: "/workspace/channels/chat" },
   { label: "channels", icon: <Hash size={18} />, to: "/workspace/channels" },
   { label: "DMS", icon: <MessageSquare size={18} />, to: "/workspace/dms" },
   { label: "Files", icon: <Folder size={18} />, to: "/workspace/files" },

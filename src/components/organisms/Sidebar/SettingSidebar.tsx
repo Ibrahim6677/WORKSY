@@ -1,57 +1,58 @@
 import { FaUser, FaBell, FaLock, FaPalette, FaUsers, FaHashtag, FaCreditCard, FaChartPie } from 'react-icons/fa';
-import { Link, useLocation } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
+import React from "react";
 
-const Sidebar = () => {
-  const location = useLocation();
+const links = [
+  { to: "/workspace/settings/profile", label: "Profile", icon: <FaUser className="text-base" /> },
+  { to: "/workspace/settings/notifications", label: "Notifications", icon: <FaBell className="text-base" /> },
+  { to: "/workspace/settings/privacy", label: "Privacy", icon: <FaLock className="text-base" /> },
+  { to: "/workspace/settings/appearance", label: "Appearance", icon: <FaPalette className="text-base" /> },
+  { to: "/workspace/settings/overview", label: "Overview", icon: <FaChartPie className="text-base" /> },
+  { to: "/workspace/settings/members", label: "Members", icon: <FaUsers className="text-base" /> },
+  { to: "/workspace/settings/channels", label: "Channels", icon: <FaHashtag className="text-base" /> },
+  { to: "/workspace/settings/billing", label: "Billing", icon: <FaCreditCard className="text-base" /> },
+];
+
+export default function SettingSidebar({ onNavigate }: { onNavigate?: () => void }) {
+  const navigate = useNavigate();
   return (
-    <div className="w-64 h-screen flex flex-col border-r border-gray-200 bg-[#F6F2FD] relative">
-      <div className='mt-3'>
-        <div className="px-3 mt-2">
-          <div className="text-xs text-gray-500 font-bold mb-1">Personal</div>
-          <div className="flex flex-col gap-1">
-            <div className="flex items-center gap-2 py-1 cursor-pointer hover:bg-[#ede7fa] rounded ">
-              <FaUser className="text-base" />
-              <Link to="/workspace/settings/profile" className={location.pathname.endsWith("/profile") ? "text-[#6629DE]" : ""}>Profile</Link>
-            </div>
-            <div className="flex items-center gap-2 py-1 cursor-pointer hover:bg-[#ede7fa] rounded ">
-              <FaBell className="text-base" />
-              <Link to="/workspace/settings/notifications" className={location.pathname.endsWith("/notifications") ? "text-[#6629DE]" : ""}>Notifications</Link>
-            </div>
-            <div className="flex items-center gap-2 py-1 cursor-pointer hover:bg-[#ede7fa] rounded ">
-              <FaLock className="text-base" />
-              <Link to="/workspace/settings/privacy" className={location.pathname.endsWith("/privacy") ? "text-[#6629DE]" : ""}>Privacy</Link>
-            </div>
-            <div className="flex items-center gap-2 py-1 cursor-pointer hover:bg-[#ede7fa] rounded ">
-              <FaPalette className="text-base" />
-              <Link to="/workspace/settings/appearance" className={location.pathname.endsWith("/appearance") ? "text-[#6629DE]" : ""}>Appearance</Link>
-            </div>
-          </div>
-        </div>
-        {/* Workspace Section */}
-        <div className="px-3 mt-4">
-          <div className="text-xs text-gray-500 font-bold mb-1">Workspace</div>
-          <div className="flex flex-col gap-1">
-            <div className="flex items-center gap-2 py-1 cursor-pointer hover:bg-[#ede7fa] rounded ">
-              <FaChartPie className="text-base" />
-              <Link to="/workspace/settings/overview" className={location.pathname.endsWith("/overview") ? "text-[#6629DE]" : ""}>Overview</Link>
-            </div>
-            <div className="flex items-center gap-2 py-1 cursor-pointer hover:bg-[#ede7fa] rounded ">
-              <FaUsers className="text-base" />
-              <Link to="/workspace/settings/members" className={location.pathname.endsWith("/members") ? "text-[#6629DE]" : ""}>Members</Link>
-            </div>
-            <div className="flex items-center gap-2 py-1 cursor-pointer hover:bg-[#ede7fa] rounded ">
-              <FaHashtag className="text-base" />
-              <Link to="/workspace/settings/channels" className={location.pathname.endsWith("/channels") ? "text-[#6629DE]" : ""}>Channels</Link>
-            </div>
-            <div className="flex items-center gap-2 py-1 cursor-pointer hover:bg-[#ede7fa] rounded ">
-              <FaCreditCard className="text-base" />
-              <Link to="/workspace/settings/billing" className={location.pathname.endsWith("/billing") ? "text-[#6629DE]" : ""}>Billing</Link>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+    <aside className="w-64 h-screen flex flex-col border-r text-black border-gray-200 bg-[#F6F2FD] relative">
+      {/* Personal */}
+      <div className="px-4 py-2 text-xs font-bold text-gray-500">Personal</div>
+      {links.slice(0, 4).map(link => (
+        <NavLink
+          key={link.to}
+          to={link.to}
+          className={({ isActive }) => isActive ? "text-[#6629DE] font-bold flex items-center gap-2 px-4 py-2" : "flex items-center gap-2 px-4 py-2"}
+          onClick={e => {
+            if (onNavigate) {
+              e.preventDefault();
+              onNavigate();
+              navigate(link.to);
+            }
+          }}
+        >
+          {link.icon} {link.label}
+        </NavLink>
+      ))}
+      {/* Workspace */}
+      <div className="px-4 py-2 text-xs font-bold text-gray-500">Workspace</div>
+      {links.slice(4).map(link => (
+        <NavLink
+          key={link.to}
+          to={link.to}
+          className={({ isActive }) => isActive ? "text-[#6629DE] font-bold flex items-center gap-2 px-4 py-2" : "flex items-center gap-2 px-4 py-2"}
+          onClick={e => {
+            if (onNavigate) {
+              e.preventDefault();
+              onNavigate();
+              navigate(link.to);
+            }
+          }}
+        >
+          {link.icon} {link.label}
+        </NavLink>
+      ))}
+    </aside>
   );
-};
-
-export default Sidebar;
+}
