@@ -1,30 +1,28 @@
-import React, { Suspense, lazy, useState, useEffect } from "react";
+import { Suspense, lazy, useState, useEffect } from "react";
 import LoadingPage from "../../pages/loadingPage";
 import { Outlet } from 'react-router-dom'
-import { GoArrowRight } from "react-icons/go";
+import { GoArrowLeft } from "react-icons/go";
 
 const ChannelsSidebar = lazy(() => import("../../components/organisms/Sidebar/ChannelsSidebar"));
 
 const ChannelsLayout = () => {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false); // Changed to false for mobile-first
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
     const handleResize = () => {
-      setIsMobile(window.innerWidth < 768);
+      const newIsMobile = window.innerWidth < 1024; // Changed to lg breakpoint
+      setIsMobile(newIsMobile);
+      
+      // Auto-open sidebar on desktop only if not already set
+      if (!newIsMobile && !sidebarOpen) {
+        setSidebarOpen(true);
+      }
     };
     handleResize();
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
-  useEffect(() => {
-    if (isMobile && sidebarOpen) {
-      document.body.classList.add("overflow-hidden");
-    } else {
-      document.body.classList.remove("overflow-hidden");
-    }
-  }, [isMobile, sidebarOpen]);
+  }, [sidebarOpen]);
 
   const handleSidebarNavigate = () => {
     if (isMobile) setSidebarOpen(false);
@@ -32,38 +30,41 @@ const ChannelsLayout = () => {
 
   return (
     <div className="flex h-screen">
-      {/* Overlay sidebar for mobile */}
-      {isMobile && (
-        <div className={`fixed inset-0 z-40 ${sidebarOpen ? 'bg-black bg-opacity-40' : 'pointer-events-none'} flex`}>
-          <div
-            className={`relative w-64 h-full bg-white border-r shadow z-50 transform transition-transform duration-300 ease-in-out ${
-              sidebarOpen ? "translate-x-0" : "-translate-x-full"
-            }`}
-          >
-            <button
-              onClick={() => setSidebarOpen(false)}
-              className="absolute top-4 right-4 text-2xl p-1 rounded hover:bg-gray-200 transition md:hidden"
-              title="إغلاق القائمة"
-            >
-              <GoArrowRight />
-            </button>
-            <Suspense fallback={<LoadingPage />}>
-              <ChannelsSidebar onNavigate={handleSidebarNavigate} />
-            </Suspense>
+      {/* Sidebar for mobile - floating over content */}
+      {isMobile && sidebarOpen && (
+        <>
+          {/* Invisible overlay to catch outside clicks */}
+          <div 
+            className="fixed inset-0 z-30" 
+            onClick={() => setSidebarOpen(false)} 
+          />
+          <div className="fixed top-0 left-0 z-40 w-72 sm:w-64 h-full max-w-[85vw]">
+            <div className="w-full h-full bg-white border-r shadow-lg">
+              <button
+                onClick={() => setSidebarOpen(false)}
+                className="absolute top-4 right-4 text-2xl p-1 rounded hover:bg-gray-200 transition z-10"
+                title="إغلاق القائمة"
+              >
+                <GoArrowLeft />
+              </button>
+              <Suspense fallback={<LoadingPage />}>
+                <ChannelsSidebar onNavigate={handleSidebarNavigate} />
+              </Suspense>
+            </div>
           </div>
-          {/* Click outside to close */}
-          <div className="flex-1" onClick={() => setSidebarOpen(false)} />
-        </div>
+        </>
       )}
       {/* Sidebar for desktop */}
-      {!isMobile && sidebarOpen && (
-        <div className="fixed top-0 left-20 h-screen w-64 bg-white border-r shadow z-20">
-          <Suspense fallback={<LoadingPage />}>
-            <ChannelsSidebar />
-          </Suspense>
+      {!isMobile && (
+        <div className={`transition-all duration-300 ease-in-out ${sidebarOpen ? "w-64" : "w-0"} bg-white border-r shadow overflow-hidden`}>
+          {sidebarOpen && (
+            <Suspense fallback={<LoadingPage />}>
+              <ChannelsSidebar />
+            </Suspense>
+          )}
         </div>
       )}
-      <main className={`flex-1 bg-white transition-all duration-300 ease-in-out flex flex-col ${!isMobile && sidebarOpen ? "ml-64" : "ml-0"}`}>
+      <main className="flex-1 bg-white transition-all duration-300 ease-in-out flex flex-col overflow-hidden">
         <Outlet context={{ sidebarOpen, setSidebarOpen, isMobile }} />
       </main>
     </div>

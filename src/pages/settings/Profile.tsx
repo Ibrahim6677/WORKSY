@@ -1,16 +1,71 @@
-import { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
+import { useDispatch, useSelector } from 'react-redux';
+import { Camera, Edit3, Save, X } from 'lucide-react';
+import type { AppDispatch, RootState } from '../../store/store';
+import { 
+  fetchUserProfile, 
+  updateProfile, 
+  uploadAvatar, 
+  deleteAvatar,
+  clearUpdateSuccess 
+} from '../../features/profile/profileSlice';
 import { InputProfile } from "../../components/atoms/input/Input";
 
 export default function Profile() {
+  const dispatch = useDispatch<AppDispatch>();
+  const { 
+    profile, 
+    loading, 
+    uploading, 
+    error, 
+    updateSuccess 
+  } = useSelector((state: RootState) => state.profile);
+  
+  const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
-    fullName: "",
-    email: "",
-    jobTitle: "",
-    status: "",
-    timeZone: "",
-    phoneNumber: "",
-    location: "",
+    fullName: profile?.fullName || "",
+    email: profile?.email || "",
+    jobTitle: profile?.jobTitle || "",
+    status: profile?.status || "",
+    timeZone: profile?.timeZone || "",
+    phoneNumber: profile?.phoneNumber || "",
+    location: profile?.location || "",
   });
+  
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Fetch user profile on component mount
+  useEffect(() => {
+    dispatch(fetchUserProfile());
+  }, [dispatch]);
+
+  // Update form data when user data changes
+  useEffect(() => {
+    if (profile) {
+      setFormData({
+        fullName: profile.fullName || "",
+        email: profile.email || "",
+        jobTitle: profile.jobTitle || "",
+        status: profile.status || "",
+        timeZone: profile.timeZone || "",
+        phoneNumber: profile.phoneNumber || "",
+        location: profile.location || "",
+      });
+    }
+  }, [profile]);
+
+  // Handle update success
+  useEffect(() => {
+    if (updateSuccess) {
+      setIsEditing(false);
+      // Show success message (you can replace this with a proper toast notification)
+      const timer = setTimeout(() => {
+        // Reset success state after showing message
+        dispatch(clearUpdateSuccess());
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [updateSuccess, dispatch]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -19,6 +74,49 @@ export default function Profile() {
       ...formData,
       [e.target.name]: e.target.value,
     });
+  };
+
+  const handleSave = async () => {
+    try {
+      await dispatch(updateProfile(formData)).unwrap();
+      setIsEditing(false);
+    } catch (error) {
+      console.error('Failed to update profile:', error);
+    }
+  };
+
+  const handleCancel = () => {
+    if (profile) {
+      setFormData({
+        fullName: profile.fullName || "",
+        email: profile.email || "",
+        jobTitle: profile.jobTitle || "",
+        status: profile.status || "",
+        timeZone: profile.timeZone || "",
+        phoneNumber: profile.phoneNumber || "",
+        location: profile.location || "",
+      });
+    }
+    setIsEditing(false);
+  };
+
+  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      try {
+        await dispatch(uploadAvatar(file)).unwrap();
+      } catch (error) {
+        console.error('Failed to upload avatar:', error);
+      }
+    }
+  };
+
+  const handleAvatarDelete = async () => {
+    try {
+      await dispatch(deleteAvatar()).unwrap();
+    } catch (error) {
+      console.error('Failed to delete avatar:', error);
+    }
   };
   const icon = (
   <svg
@@ -36,30 +134,118 @@ export default function Profile() {
 );
 
 
-  interface SubmitEvent extends React.FormEvent<HTMLFormElement> {}
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
-  const handleSubmit = (e: SubmitEvent) => {
-    e.preventDefault();
-    console.log(formData);
-  };
+  if (error) {
+    return (
+      <div className="max-w-full mx-auto p-6 bg-white rounded-md shadow-sm">
+        <div className="text-red-600 text-center">
+          <p>Error loading profile: {error}</p>
+          <button 
+            onClick={() => dispatch(fetchUserProfile())}
+            className="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
       <div className="max-w-full mx-auto p-6 bg-white rounded-md shadow-sm">
-        <h2 className="text-xl font-semibold mb-2">User Profile</h2>
+        {/* Success Message */}
+        {updateSuccess && (
+          <div className="mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded">
+            Profile updated successfully!
+          </div>
+        )}
+        
+        <div className="flex items-center justify-between mb-2">
+          <h2 className="text-xl font-semibold">User Profile</h2>
+          {!isEditing ? (
+            <button
+              onClick={() => setIsEditing(true)}
+              className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+              disabled={loading}
+            >
+              <Edit3 size={16} />
+              <span>Edit Profile</span>
+            </button>
+          ) : (
+            <div className="flex space-x-2">
+              <button
+                onClick={handleSave}
+                className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
+                disabled={loading}
+              >
+                <Save size={16} />
+                <span>{loading ? 'Saving...' : 'Save'}</span>
+              </button>
+              <button
+                onClick={handleCancel}
+                className="flex items-center space-x-2 px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 disabled:opacity-50"
+                disabled={loading}
+              >
+                <X size={16} />
+                <span>Cancel</span>
+              </button>
+            </div>
+          )}
+        </div>
         <hr className="mb-6 relative top-0 -left-2 text-[#D0D0D0] w-30" />
 
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b pb-6 mb-6">
           <div className="flex items-center space-x-4">
-            <img
-              src="https://randomuser.me/api/portraits/women/44.jpg"
-              alt="Profile"
-              className="w-29 h-26 rounded-full object-cover stroke-5 stroke-white"
-            />
+            <div className="relative">
+              <img
+                src={profile?.avatar || "https://randomuser.me/api/portraits/women/44.jpg"}
+                alt="Profile"
+                className="w-29 h-26 rounded-full object-cover stroke-5 stroke-white"
+              />
+              {isEditing && (
+                <div className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center">
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={() => fileInputRef.current?.click()}
+                      className="p-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 disabled:opacity-50"
+                      disabled={uploading}
+                      title="Upload Avatar"
+                    >
+                      <Camera size={16} />
+                    </button>
+                    {profile?.avatar && (
+                      <button
+                        onClick={handleAvatarDelete}
+                        className="p-2 bg-red-600 text-white rounded-full hover:bg-red-700 disabled:opacity-50"
+                        disabled={uploading}
+                        title="Delete Avatar"
+                      >
+                        <X size={16} />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleAvatarUpload}
+                className="hidden"
+              />
+            </div>
             <div>
-              <h3 className="font-bold text-Montserrat text-xl">Zeinab AShraf</h3>
-              <p className="text-[#A1A1A1] text-xl font-normal text-inter">Product Design</p>
+              <h3 className="font-bold text-Montserrat text-xl">{profile?.fullName || 'User Name'}</h3>
+              <p className="text-[#A1A1A1] text-xl font-normal text-inter">{profile?.jobTitle || 'Job Title'}</p>
               <p className="text-[#A1A1A1] text-[16px] font-normal text-inter">
-                Eastern European Time (EET), Cairo UTC +3
+                {profile?.timeZone || 'Eastern European Time (EET), Cairo UTC +3'}
               </p>
             </div>
           </div>
@@ -73,7 +259,7 @@ export default function Profile() {
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="space-y-4">
           {/* Full Name */}
           <div>
             <label className="block text-sm mb-1 font-medium capitalize">
@@ -85,8 +271,9 @@ export default function Profile() {
                 value={formData.fullName}
                 onChange={handleChange}
                 placeholder="Your Full Name"
+                disabled={!isEditing}
               />
-              {icon}
+              {isEditing && icon}
             </div>
           </div>
 
@@ -102,8 +289,9 @@ export default function Profile() {
                 value={formData.email}
                 onChange={handleChange}
                 placeholder="Your Email Address"
+                disabled={!isEditing}
               />
-              {icon}
+              {isEditing && icon}
             </div>
           </div>
 
@@ -118,8 +306,9 @@ export default function Profile() {
                 value={formData.jobTitle}
                 onChange={handleChange}
                 placeholder="Product Design"
+                disabled={!isEditing}
               />
-              {icon}
+              {isEditing && icon}
             </div>
           </div>
 
@@ -134,8 +323,9 @@ export default function Profile() {
                 value={formData.status}
                 onChange={handleChange}
                 placeholder="Working Remotly"
+                disabled={!isEditing}
               />
-              {icon}
+              {isEditing && icon}
             </div>
           </div>
 
@@ -150,6 +340,7 @@ export default function Profile() {
                 value={formData.timeZone}
                 onChange={handleChange}
                 className="flex-1 outline-none bg-transparent"
+                disabled={!isEditing}
               >
                 <option value="">Select Time Zone</option>
                 <option>Eastern European Time (EET)</option>
@@ -170,8 +361,9 @@ export default function Profile() {
                 value={formData.phoneNumber}
                 onChange={handleChange}
                 placeholder="124566677777"
+                disabled={!isEditing}
               />
-              {icon}
+              {isEditing && icon}
             </div>
           </div>
 
@@ -186,21 +378,12 @@ export default function Profile() {
                 value={formData.location}
                 onChange={handleChange}
                 placeholder="Cairo"
+                disabled={!isEditing}
               />
-              {icon}
+              {isEditing && icon}
             </div>
           </div>
-
-          {/* Save Changes Button */}
-          <div>
-            <button
-              type="submit"
-              className="bg-[#6629DE] text-white px-6 py-2 rounded-md hover:bg-[#5b24b5]"
-            >
-              Save Change
-            </button>
-          </div>
-        </form>
+        </div>
       </div>
   );
 }

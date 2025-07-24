@@ -73,14 +73,30 @@ const CustomEvent = ({ event }: CustomEventProps) => {
 
 interface ScheduleCalendarProps {
   date: Date;
+  googleEvents?: any[];
+  onCreateEvent?: (eventData: any) => Promise<void>;
 }
 
-export default function ScheduleCalendar({ date }: ScheduleCalendarProps) {
-  const events: {
+export default function ScheduleCalendar({ date, googleEvents = [], onCreateEvent }: ScheduleCalendarProps) {
+  // Convert Google Events to calendar format
+  const formatGoogleEvents = (events: any[]) => {
+    return events.map((event: any) => ({
+      title: event.summary || 'Google Event',
+      start: new Date(event.start?.dateTime || event.start?.date),
+      end: new Date(event.end?.dateTime || event.end?.date),
+      resource: 'blue' as ResourceColor, // Google events in blue
+      isGoogleEvent: true,
+      googleEventId: event.id,
+    }));
+  };
+
+  const localEvents: {
     title: string;
     start: Date;
     end: Date;
     resource: ResourceColor;
+    isGoogleEvent?: boolean;
+    googleEventId?: string;
   }[] = [
     // Monday 12
     {
@@ -144,6 +160,12 @@ export default function ScheduleCalendar({ date }: ScheduleCalendarProps) {
     },
   ];
 
+  // Combine local events with Google events
+  const allEvents = [
+    ...localEvents,
+    ...formatGoogleEvents(googleEvents)
+  ];
+
   return (
     <div className="w-full bg-white rounded-none shadow-none p-0 relative">
       <style>{`
@@ -197,7 +219,7 @@ export default function ScheduleCalendar({ date }: ScheduleCalendarProps) {
         date={date}
         onNavigate={() => {}}
         localizer={localizer}
-        events={events}
+        events={allEvents}
         defaultView="week"
         views={["week"]}
         startAccessor="start"

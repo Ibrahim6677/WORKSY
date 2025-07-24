@@ -116,8 +116,13 @@ const CallSidebar: React.FC<CallSidebarProps> = ({ showChatSidebar, setShowChatS
                 )}
                 <span className="text-[15px] text-gray-900 flex-1">{name}</span>
                 <span className="flex gap-1 items-center">
-                  {micOffSvg}
-                  {camOffSvg}
+                  {/* Mic and Camera status indicators */}
+                  <div className="w-5 h-5 rounded-full bg-red-100 flex items-center justify-center">
+                    {micOffSvg}
+                  </div>
+                  <div className="w-5 h-5 rounded-full bg-red-100 flex items-center justify-center">
+                    {camOffSvg}
+                  </div>
                 </span>
               </li>
             );
@@ -140,7 +145,7 @@ const CallSidebar: React.FC<CallSidebarProps> = ({ showChatSidebar, setShowChatS
           </div>
           {/* الرسائل */}
           <div className="flex-1 overflow-y-auto px-2 pb-2">
-            {messages.map((msg, idx) => (
+            {messages.map((msg) => (
               <div key={msg.id} className="flex items-start gap-3 mb-6">
                 <img
                   src={msg.avatar}

@@ -1,4 +1,4 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useParams } from "react-router-dom";
 import {
   Home,
   Hash,
@@ -9,18 +9,23 @@ import {
   Settings
 } from "lucide-react";
 import logo from "../../../assets/images/Vector1.svg";
-
-const navItems = [
-  { label: "Home", icon: <Home size={18} />, to: "/workspace/channels/chat" },
-  { label: "channels", icon: <Hash size={18} />, to: "/workspace/channels" },
-  { label: "DMS", icon: <MessageSquare size={18} />, to: "/workspace/dms" },
-  { label: "Files", icon: <Folder size={18} />, to: "/workspace/files" },
-  { label: "Calendar", icon: <Calendar size={18} />, to: "/workspace/calendar" },
-  { label: "notification", icon: <Bell size={18} />, to: "/workspace/settings/notifications" },
-  { label: "Settings", icon: <Settings size={18} />, to: "/workspace/settings" }
-];
+import { useWorkspaceParams } from "../../../hooks/useWorkspace/useWorkspaceParams";
 
 export default function MainSidebar() {
+  const { workspaceId } = useWorkspaceParams();
+  
+  // If no workspace ID, default to a fallback
+  const wsId = workspaceId || 'default';
+  
+  const navItems = [
+    { label: "Home", icon: <Home size={18} />, to: `/workspace/${wsId}/channels` },
+    { label: "channels", icon: <Hash size={18} />, to: `/workspace/${wsId}/channels` },
+    { label: "DMS", icon: <MessageSquare size={18} />, to: `/workspace/${wsId}/dms` },
+    { label: "Files", icon: <Folder size={18} />, to: `/workspace/${wsId}/files` },
+    { label: "Calendar", icon: <Calendar size={18} />, to: `/workspace/${wsId}/calendar` },
+    { label: "notification", icon: <Bell size={18} />, to: `/workspace/${wsId}/settings/notifications` },
+    { label: "Settings", icon: <Settings size={18} />, to: `/workspace/${wsId}/settings` }
+  ];
   return (
     <aside className="w-20 h-screen bg-purple-100 flex flex-col items-center justify-between py-4">
       {/* Top Logo */}

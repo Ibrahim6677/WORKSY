@@ -1,4 +1,5 @@
-import React, { Suspense, lazy } from "react";
+import { Suspense, lazy } from "react";
+import { Navigate } from "react-router-dom";
 import LoadingPage from "../pages/loadingPage";
 import type { RouteObject } from "react-router-dom";
 
@@ -13,10 +14,15 @@ const PublicRoutes: RouteObject = {
   element: <Suspense fallback={<LoadingPage />}><PublicLayout /></Suspense>,
   children: [
     { path: "/", element: <Suspense fallback={<LoadingPage />}><HomePage /></Suspense> },
-    { path: "banner", element: <Suspense fallback={<LoadingPage />}><Banner /></Suspense> },
-    { path: "collaboration", element: <Suspense fallback={<LoadingPage />}><Collaboration /></Suspense> },
-    { path: "intuitive-way", element: <Suspense fallback={<LoadingPage />}><IntuitiveWay /></Suspense> },
-    { path: "testimonials", element: <Suspense fallback={<LoadingPage />}><SwiperTestimonials /></Suspense> },
+    { path: "/home", element: <Navigate to="/" replace /> }, // Redirect /home to /
+    { path: "/landing", element: <Suspense fallback={<LoadingPage />}><Banner /></Suspense> },
+    { path: "/collaboration", element: <Suspense fallback={<LoadingPage />}><Collaboration /></Suspense> },
+    { path: "/features", element: <Suspense fallback={<LoadingPage />}><IntuitiveWay /></Suspense> },
+    { path: "/testimonials", element: <Suspense fallback={<LoadingPage />}><SwiperTestimonials /></Suspense> },
+    
+    // Legacy routes (redirects)
+    { path: "/banner", element: <Navigate to="/landing" replace /> },
+    { path: "/intuitive-way", element: <Navigate to="/features" replace /> },
   ],
 };
 

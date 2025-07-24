@@ -1,17 +1,42 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
-export default function Step2ProfilePhoto({ nextStep, prevStep }: { nextStep: () => void; prevStep: () => void }) {
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+interface WorkspaceData {
+  name: string;
+  description: string;
+  image: string | null;
+  userName: string;
+  userPhoto: File | null;
+  inviteEmails: string[];
+}
+
+interface Props {
+  nextStep: () => void;
+  prevStep: () => void;
+  workspaceData: WorkspaceData;
+  updateWorkspaceData: (data: Partial<WorkspaceData>) => void;
+}
+
+export default function Step2ProfilePhoto({ nextStep, prevStep, workspaceData, updateWorkspaceData }: Props) {
+  const [selectedFile, setSelectedFile] = useState<File | null>(workspaceData.userPhoto);
   const [previewUrl, setPreviewUrl] = useState<string>('');
   const [isDragOver, setIsDragOver] = useState(false);
-  const [name, setName] = useState('');
+  const [name, setName] = useState(workspaceData.userName);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (workspaceData.userPhoto) {
+      const url = URL.createObjectURL(workspaceData.userPhoto);
+      setPreviewUrl(url);
+      return () => URL.revokeObjectURL(url);
+    }
+  }, [workspaceData.userPhoto]);
 
   const handleFileSelect = (file: File) => {
     if (file && file.type.startsWith('image/')) {
       setSelectedFile(file);
       const url = URL.createObjectURL(file);
       setPreviewUrl(url);
+      updateWorkspaceData({ userPhoto: file });
     }
   };
 
@@ -70,7 +95,10 @@ export default function Step2ProfilePhoto({ nextStep, prevStep }: { nextStep: ()
           id="name"
           type="text"
           value={name}
-          onChange={(e) => setName(e.target.value)}
+          onChange={(e) => {
+            setName(e.target.value);
+            updateWorkspaceData({ userName: e.target.value });
+          }}
           placeholder="Enter your full name"
           maxLength={50}
           className="w-full border border-gray-300 px-4 py-2 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"

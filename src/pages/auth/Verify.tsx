@@ -1,22 +1,27 @@
 import React, { useRef, useState } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import type { RootState, AppDispatch } from "../../store/store";
+import {
+  completeLoginAsync,
+  verifyEmailAsync,
+  forgotPasswordVerifyAsync,
+  resendVerificationEmailAsync
+} from "../../features/auth/authSlice";
 import imgLogin from "../../assets/images/Delivery _ order, account, transportation, subway, box, shopping.png";
 import logo from "../../assets/images/Vector1.svg";
 import { useNavigate, useLocation } from "react-router-dom";
-import { login as loginAction } from "../../features/auth/authSlice";
-import * as authApi from "../../services/api/auth/authApi";
 
 const Verify = () => {
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const inputsRef = useRef<(HTMLInputElement | null)[]>([]);
   const navigate = useNavigate();
   const location = useLocation();
   const from = location.state?.from; // "login" | "register" | "forget"
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [resendLoading, setResendLoading] = useState(false);
 
+  const { loading, error } = useSelector((state: RootState) => state.auth);
+  
   const email = location.state?.email;
   const sessionToken = location.state?.sessionToken;
 
@@ -40,16 +45,15 @@ const Verify = () => {
 
   const handleResendVerification = async () => {
     if (!email) {
-      setError("البريد الإلكتروني غير متوفر");
+      alert("البريد الإلكتروني غير متوفر");
       return;
     }
     setResendLoading(true);
-    setError(null);
     try {
-      await authApi.resendVerificationEmail(email);
+      await dispatch(resendVerificationEmailAsync(email)).unwrap();
       alert("تم إرسال رمز التحقق مرة أخرى");
     } catch (err: any) {
-      setError(err.response?.data?.message || "فشل إعادة إرسال رمز التحقق");
+      alert(err || "فشل إعادة إرسال رمز التحقق");
     } finally {
       setResendLoading(false);
     }
@@ -60,29 +64,34 @@ const Verify = () => {
       alert("من فضلك ادخل الكود كاملاً.");
       return;
     }
-    setLoading(true);
-    setError(null);
+
     try {
       if (from === "login") {
-        // هنا تستخدم completeLogin
-        const res = await authApi.completeLogin({ email, sessionToken, otp: code });
-        // res.token ← هذا هو accessToken النهائي
-        localStorage.setItem("accessToken", res.token);
-        dispatch(loginAction());
+        // استخدام completeLogin async thunk
+        await dispatch(completeLoginAsync({ 
+          email, 
+          sessionToken, 
+          otp: code 
+        })).unwrap();
         navigate("/workspace");
       } else if (from === "register") {
-        await authApi.verifyEmail({ email, token: code });
+        await dispatch(verifyEmailAsync(code)).unwrap();
         navigate("/login");
       } else if (from === "forget-password") {
-        await authApi.verifyResetPin({ email, pin: code });
+        // استخدام resetToken من Redux state
+        const resetToken = location.state?.resetToken;
+        await dispatch(forgotPasswordVerifyAsync({ 
+          email, 
+          pin: code, 
+          resetToken 
+        })).unwrap();
         navigate("/reset-password", { state: { email, token: code } });
       } else {
-        setError("حدث خطأ: لم يتم تحديد نوع التحقق.");
+        alert("حدث خطأ: لم يتم تحديد نوع التحقق.");
       }
     } catch (err: any) {
-      setError(err.response?.data?.message || "فشل التحقق");
-    } finally {
-      setLoading(false);
+      // الخطأ سيكون متاح في Redux state
+      console.error("Verification failed:", err);
     }
   };
 

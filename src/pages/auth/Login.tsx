@@ -1,46 +1,47 @@
 import { Link, useNavigate } from "react-router-dom";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useEffect, useState } from "react";
-import { login as loginAction } from "../../features/auth/authSlice";
+import type { RootState, AppDispatch } from "../../store/store";
+import { loginAsync } from "../../features/auth/authSlice";
 import imgLogin from "../../assets/images/Delivery _ order, account, transportation, subway, box, shopping.png";
 import logo from "../../assets/images/Vector1.svg";
 import googleIcon from "../../assets/images/Group.svg";
 import micIcon from "../../assets/images/Group9.svg";
 import Input, { InputSubmit } from "../../components/atoms/input/Input";
-import * as authApi from "../../services/api/auth/authApi";
-// import { useAuth } from "../../hooks/useAuth/useAuth";
+import { useAuth } from "../../hooks/useAuth/useAuth";
 import { loginWithGoogle } from "../../services/api/auth/authApi";
 
 const Login = () => {
   const navigate = useNavigate();
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  // const { isAuthenticated } = useAuth();
-  
+  const { isAuthenticated } = useAuth();
+  const { loading, error } = useSelector((state: RootState) => state.auth);
 
-  // useEffect(() => {
-  //   if (isAuthenticated) {
-  //     navigate("/workspace")
-  //   }
-  // }, [isAuthenticated, navigate]);
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate("/workspace")
+    }
+  }, [isAuthenticated, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    setError(null);
+    
     try {
-      // backend سيرجع sessionToken فقط
-      const res = await authApi.login({ email, password });
-      // res.sessionToken
-      navigate("/verify", { state: { from: "login", email, sessionToken: res.sessionToken } });
+      const result = await dispatch(loginAsync({ email, password })).unwrap();
+      // بعد نجاح login، سيتم تحديث sessionToken في Redux
+      navigate("/verify", { 
+        state: { 
+          from: "login", 
+          email, 
+          sessionToken: result.data.sessionToken 
+        } 
+      });
     } catch (err: any) {
-      setError(err.response?.data?.message || "Login failed");
-    } finally {
-      setLoading(false);
+      // الخطأ سيكون متاح في Redux state
+      console.error("Login failed:", err);
     }
   };
 

@@ -1,23 +1,25 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import type { RootState, AppDispatch } from "../../store/store";
+import { registerAsync } from "../../features/auth/authSlice";
 import imgLogin from "../../assets/images/Delivery _ order, account, transportation, subway, box, shopping.png";
 import logo from "../../assets/images/Vector1.svg";
 import googleIcon from "../../assets/images/Group.svg";
 import micIcon from "../../assets/images/Group9.svg";
 import Input, { InputSubmit } from "../../components/atoms/input/Input";
-import * as authApi from "../../services/api/auth/authApi";
 import { useAuth } from "../../hooks/useAuth/useAuth";
 import { loginWithGoogle } from "../../services/api/auth/authApi";
 
 const Register = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch<AppDispatch>();
 
   const [userName, setUserName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const { isAuthenticated } = useAuth();
+  const { loading, error } = useSelector((state: RootState) => state.auth);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -28,27 +30,24 @@ const Register = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!userName || !email || !password) {
-      setError("كل الحقول مطلوبة");
+      alert("كل الحقول مطلوبة");
       return;
     }
     if (!email.includes("@")) {
-      setError("صيغة الإيميل غير صحيحة");
+      alert("صيغة الإيميل غير صحيحة");
       return;
     }
-    setLoading(true);
-    setError(null);
 
     try {
-      await authApi.register({
+      await dispatch(registerAsync({
         name: userName,
         email,
         password
-      });
+      })).unwrap();
       navigate("/verify", { state: { from: "register", email } });
     } catch (err: any) {
-      setError(err.response?.data?.message || "Registration failed");
-    } finally {
-      setLoading(false);
+      // الخطأ سيكون متاح في Redux state
+      console.error("Registration failed:", err);
     }
   };
 

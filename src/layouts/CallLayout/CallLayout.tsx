@@ -12,7 +12,11 @@ const CallLayout: React.FC<CallLayoutProps> = ({ children, showHeader = true }) 
       {/* هيدر المكالمة */}
       {showHeader && (
         <header>
-          <ChatHeader />
+          <ChatHeader
+            onOpenThreadSidebar={() => {}}
+            sidebarOpen={false}
+            onToggleSidebar={() => {}}
+          />
         </header>
       )}
       {/* محتوى المكالمة */}

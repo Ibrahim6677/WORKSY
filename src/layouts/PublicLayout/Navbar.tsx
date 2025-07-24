@@ -1,13 +1,21 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import logo from "../../assets/images/Vector1.svg";
-import { Link, NavLink } from "react-router-dom";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 import {BottomLink, BottomMenuLink} from "../../components/atoms/Bottom/BottomLink";
 import { useAuth } from "../../hooks/useAuth/useAuth";
+import { useDispatch } from "react-redux";
+import { logout } from "../../features/auth/authSlice";
+import type { AppDispatch } from "../../store/store";
+import { ChevronDown, User, LogOut, Rocket } from "lucide-react";
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
   const { isAuthenticated, user } = useAuth();
+  const dispatch = useDispatch<AppDispatch>();
+  const navigate = useNavigate();
+  const dropdownRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const handleScroll = () => {
       const isScrolled = window.scrollY >= 500;
@@ -29,6 +37,31 @@ export default function Navbar() {
       document.body.style.overflow = "unset";
     }
   }, [menuOpen]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setDropdownOpen(false);
+      }
+    }
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  const handleLogout = () => {
+    dispatch(logout());
+    setDropdownOpen(false);
+    navigate('/home');
+  };
+
+  const handleGetStarted = () => {
+    setDropdownOpen(false);
+    navigate('/workspace');
+  };
 
   return (
     <nav
@@ -94,13 +127,58 @@ export default function Navbar() {
               </BottomLink>
             </>
           ) : (
-            <div className="flex items-center gap-2">
-              <img
-                src={user?.avatar || '/path/to/default-avatar.png'}
-                alt="User Avatar"
-                className="w-10 h-10 rounded-full object-cover border"
-              />
-              {/* ممكن تضيف اسم المستخدم أو قائمة منسدلة هنا */}
+            <div className="relative" ref={dropdownRef}>
+              <button
+                onClick={() => setDropdownOpen(!dropdownOpen)}
+                className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors ${
+                  scrolled 
+                    ? "text-white hover:bg-white/10" 
+                    : "text-black hover:bg-gray-100"
+                }`}
+              >
+                <div className="flex items-center space-x-2">
+                  {user?.avatar ? (
+                    <img
+                      src={user.avatar}
+                      alt="User Avatar"
+                      className="w-8 h-8 rounded-full object-cover border"
+                    />
+                  ) : (
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                      scrolled ? "bg-white/20" : "bg-gray-200"
+                    }`}>
+                      <User size={18} className={scrolled ? "text-white" : "text-gray-600"} />
+                    </div>
+                  )}
+                  <span className="font-medium">{user?.name || 'User'}</span>
+                </div>
+                <ChevronDown 
+                  size={16} 
+                  className={`transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} 
+                />
+              </button>
+
+              {/* Dropdown Menu */}
+              {dropdownOpen && (
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border z-50">
+                  <div className="py-1">
+                    <button
+                      onClick={handleGetStarted}
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
+                    >
+                      <Rocket size={16} />
+                      <span>Get Started</span>
+                    </button>
+                    <button
+                      onClick={handleLogout}
+                      className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center space-x-2"
+                    >
+                      <LogOut size={16} />
+                      <span>Log Out</span>
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -177,13 +255,48 @@ export default function Navbar() {
                   </BottomMenuLink>
                 </>
               ) : (
-                <div className="flex items-center gap-2">
-                  <img
-                    src={user?.avatar || '/path/to/default-avatar.png'}
-                    alt="User Avatar"
-                    className="w-10 h-10 rounded-full object-cover border"
-                  />
-                  {/* ممكن تضيف اسم المستخدم أو قائمة منسدلة هنا */}
+                <div className="space-y-4">
+                  {/* User Info */}
+                  <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                    {user?.avatar ? (
+                      <img
+                        src={user.avatar}
+                        alt="User Avatar"
+                        className="w-10 h-10 rounded-full object-cover border"
+                      />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
+                        <User size={20} className="text-gray-600" />
+                      </div>
+                    )}
+                    <div>
+                      <p className="font-medium text-gray-900">{user?.name || 'User'}</p>
+                      <p className="text-sm text-gray-500">{user?.email}</p>
+                    </div>
+                  </div>
+                  
+                  {/* Action Buttons */}
+                  <button
+                    onClick={() => {
+                      setMenuOpen(false);
+                      handleGetStarted();
+                    }}
+                    className="w-full flex items-center justify-center space-x-2 py-3 px-4 bg-[#6629DE] text-white rounded-lg font-medium hover:bg-[#5520b8] transition-colors"
+                  >
+                    <Rocket size={18} />
+                    <span>Get Started</span>
+                  </button>
+                  
+                  <button
+                    onClick={() => {
+                      setMenuOpen(false);
+                      handleLogout();
+                    }}
+                    className="w-full flex items-center justify-center space-x-2 py-3 px-4 border-2 border-red-500 text-red-500 rounded-lg font-medium hover:bg-red-50 transition-colors"
+                  >
+                    <LogOut size={18} />
+                    <span>Log Out</span>
+                  </button>
                 </div>
               )}
             </div>

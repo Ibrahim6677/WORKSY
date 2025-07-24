@@ -1,36 +1,40 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import type { RootState, AppDispatch } from "../../store/store";
+import { resetPasswordAsync } from "../../features/auth/authSlice";
 import imgLogin from "../../assets/images/Delivery _ order, account, transportation, subway, box, shopping.png";
 import logo from "../../assets/images/Vector1.svg";
 import Input, { InputSubmit } from "../../components/atoms/input/Input";
 import { useState } from "react";
-import * as authApi from "../../services/api/auth/authApi";
-import { useLocation } from "react-router-dom";
 
 const ResetPassword = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const dispatch = useDispatch<AppDispatch>();
   const [password, setPassword] = useState<string>("");
   const [confirmPassword, setConfirmPassword] = useState<string>("");
-  const [error, setError] = useState<string>("");
-  const [loading, setLoading] = useState(false);
-  const email = location.state?.email;
-  const token = location.state?.token; // أو حسب ما يرسله backend
+  const [localError, setLocalError] = useState<string>("");
+  
+  const { loading, error } = useSelector((state: RootState) => state.auth);
+  const token = location.state?.token;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (password !== confirmPassword) {
-      setError("Passwords do not match");
+      setLocalError("Passwords do not match");
       return;
     }
-    setLoading(true);
-    setError("");
+    
     try {
-      await authApi.resetPassword({ token, password });
+      await dispatch(resetPasswordAsync({ 
+        token, 
+        password, 
+        confirmPassword 
+      })).unwrap();
       navigate("/login");
     } catch (err: any) {
-      setError(err.response?.data?.message || "Something went wrong");
-    } finally {
-      setLoading(false);
+      // الخطأ سيكون متاح في Redux state
+      console.error("Reset password failed:", err);
     }
   };
 
@@ -39,9 +43,9 @@ const ResetPassword = () => {
     setPassword(value);
 
     if (value.length < 6) {
-      setError("Password must be at least 6 characters long");
+      setLocalError("Password must be at least 6 characters long");
     } else {
-      setError("");
+      setLocalError("");
     }
   };
 
@@ -50,9 +54,9 @@ const ResetPassword = () => {
     setConfirmPassword(value);
 
     if (password !== value) {
-      setError("Passwords do not match");
+      setLocalError("Passwords do not match");
     } else {
-      setError("");
+      setLocalError("");
     }
   };
 
@@ -93,7 +97,7 @@ const ResetPassword = () => {
               value={confirmPassword}
               onChange={handleConfirmPassword}
             />
-            {error && <p className="text-red-500 text-sm">{error}</p>}
+            {(error || localError) && <p className="text-red-500 text-sm">{error || localError}</p>}
             <InputSubmit
               type="submit"
               value={loading ? "Loading..." : "Update Password"}

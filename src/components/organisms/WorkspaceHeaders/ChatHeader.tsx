@@ -1,7 +1,7 @@
-import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { InputSearch } from "../../atoms/input/Input";
 import { GoArrowLeft, GoArrowRight } from "react-icons/go";
+import { useWorkspaceParams } from "../../../hooks/useWorkspace/useWorkspaceParams";
 
 type ChatHeaderProps = {
   onOpenThreadSidebar: () => void;
@@ -14,10 +14,13 @@ const ChatHeader = ({
   sidebarOpen,
   onToggleSidebar,
 }: ChatHeaderProps) => {
-  const [inCall, setInCall] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const isInCallPage = location.pathname.includes("/workspace/channels/call");
+  const { workspaceId } = useWorkspaceParams();
+  
+  // If no workspace ID, default to a fallback
+  const wsId = workspaceId || 'default';
+  const isInCallPage = location.pathname.includes(`/workspace/${wsId}/channels/`) && location.pathname.includes('/call');
 
   return (
     <div className="flex items-center justify-between px-4 py-3 bg-white border-b border-gray-100">
@@ -41,8 +44,7 @@ const ChatHeader = ({
         {/* Call Icon */}
         <button
           onClick={() => {
-            setInCall(true);
-            navigate("/workspace/channels/call");
+            navigate(`/workspace/${wsId}/channels/general/call`);
           }}
           className={`p-2 rounded-full transition ${isInCallPage ? "bg-green-100 text-green-600" : "hover:bg-gray-100"}`}
           disabled={isInCallPage}
@@ -66,8 +68,7 @@ const ChatHeader = ({
         </button>
         <button
           onClick={() => {
-            setInCall(true);
-            navigate("/workspace/channels/call");
+            navigate(`/workspace/${wsId}/channels/general/call`);
           }}
           className={`p-2 rounded-full transition ${isInCallPage ? "bg-green-100 text-green-600" : "hover:bg-gray-100"}`}
           disabled={isInCallPage}

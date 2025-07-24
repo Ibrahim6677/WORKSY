@@ -1,27 +1,28 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import type { RootState, AppDispatch } from "../../store/store";
+import { forgotPasswordRequestAsync } from "../../features/auth/authSlice";
 import imgLogin from "../../assets/images/Delivery _ order, account, transportation, subway, box, shopping.png";
 import logo from "../../assets/images/Vector1.svg";
 import Input, { InputSubmit } from "../../components/atoms/input/Input";
-import * as authApi from "../../services/api/auth/authApi";
-
 
 const ForgetPassword = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch<AppDispatch>();
   const [email, setEmail] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  
+  const { loading, error } = useSelector((state: RootState) => state.auth);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    setError(null);
+    
     try {
-      await authApi.requestResetPin({ email });
+      await dispatch(forgotPasswordRequestAsync(email)).unwrap();
       navigate("/verify", { state: { from: "forget-password", email } });
     } catch (err: any) {
-      setError(err.response?.data?.message || "Something went wrong");
-    } finally {
-      setLoading(false);
+      // الخطأ سيكون متاح في Redux state
+      console.error("Reset password request failed:", err);
     }
   };
   return (
@@ -58,7 +59,6 @@ const ForgetPassword = () => {
             <InputSubmit
               type="submit"
               value={loading ? "Loading..." : "Send New Password"}
-              to="/reset-password"
               className="bg-[#6629DE] text-white rounded-2xl w-full mt-4 py-3 cursor-pointer hover:opacity-90 transition duration-300"
               disabled={loading}
             />
