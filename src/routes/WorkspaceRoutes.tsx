@@ -22,7 +22,7 @@ const CallPage = lazy(() => import("../pages/call/CallPage"));
 const WorkspaceLayout = lazy(() => import("../layouts/WorkspaceLayout/WorkspaceLayout"));
 
 const WorkspaceRoutes: RouteObject = {
-  // element: <ProtectedRoute />,
+  element: <ProtectedRoute />,
   children: [
     // Workspace home/selection page
     { path: "/workspace", element: <Suspense fallback={<LoadingPage />}><WorkspaceHome /></Suspense> },
