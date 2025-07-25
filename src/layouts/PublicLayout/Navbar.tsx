@@ -55,7 +55,7 @@ export default function Navbar() {
   const handleLogout = () => {
     dispatch(logout());
     setDropdownOpen(false);
-    navigate('/home');
+    navigate('/');
   };
 
   const handleGetStarted = () => {
