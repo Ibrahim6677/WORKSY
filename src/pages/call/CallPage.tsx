@@ -1,174 +1,110 @@
-import { Suspense, lazy, useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import LoadingPage from "../loadingPage";
+import { useState, Suspense, lazy } from "react";
+import { useNavigate } from "react-router-dom";
 import { useWorkspaceParams } from "../../hooks/useWorkspace/useWorkspaceParams";
+import { useCall } from "../../hooks/useCall/useCall";
+import LoadingPage from "../loadingPage";
 
 const CallLayout = lazy(() => import("../../layouts/CallLayout/CallLayout"));
-const CallControls = lazy(() => import("../../components/organisms/CallControls/CallControls"));
-const CallSidebar = lazy(() => import("../../components/organisms/Sidebar/CallSidebar"));
-
-const dummyUsers = [
-  { id: 1, name: "Cassie Jung" },
-  { id: 2, name: "Alice Wong" },
-  { id: 3, name: "Theresa Webb" },
-  { id: 4, name: "Christian Wong" },
-  { id: 5, name: "Linda Kay" },
-];
-
-const dummyMembers = [
-  "George Alan",
-  "Safiya Fareena",
-  "Robert Allen",
-  "Scott Franklin",
-  "Scott Franklin",
-  "Scott Franklin",
-  "Scott Franklin",
-  "Muhammed",
-];
-
-const dummyMessages = [
-  { id: 1, user: "Linda Kay", text: "Good afternoon, everyone." },
-  { id: 2, user: "Scott Franklin", text: "We will start this meeting now." },
-  { id: 3, user: "Scott Franklin", text: "Can you guys hear my voice?" },
-  { id: 4, user: "Muhammed", text: "absolutely!" },
-];
 
 const CallPage = () => {
-  const [isInCall, setIsInCall] = useState(true);
+  const { currentCall, isInCall, endCall } = useCall();
   const navigate = useNavigate();
-  const location = useLocation();
   const { workspaceId } = useWorkspaceParams();
   
-  // If no workspace ID, default to a fallback
   const wsId = workspaceId || 'default';
-  
-  // Check if this is a DM call or channel call
-  const isDMCall = location.pathname.includes('/dms/');
-  const channelId = location.pathname.split('/')[4]; // Get channel or conversation ID
   const [isMicOn, setIsMicOn] = useState(true);
   const [isCamOn, setIsCamOn] = useState(true);
   const [showChatSidebar, setShowChatSidebar] = useState(false);
 
-  // حالة المايك لكل مستخدم
-  const [userMics, setUserMics] = useState<Record<number, boolean>>(
-    dummyUsers.reduce((acc, user) => ({ ...acc, [user.id]: true }), {})
-  );
-
-  // دالة تبديل حالة المايك لمستخدم معين
-  const toggleUserMic = (userId: number) => {
-    setUserMics((prev) => ({ ...prev, [userId]: !prev[userId] }));
+  const handleEndCall = async () => {
+    if (currentCall) {
+      await endCall(wsId, currentCall.id);
+      // Redirect after ending call
+      navigate(`/workspace/${wsId}/channels/general`);
+    }
   };
-  
-  if (!isInCall) {
-    setTimeout(() => {
-      // Redirect based on call type
-      if (isDMCall) {
-        navigate(`/workspace/${wsId}/dms/${channelId}`);
-      } else {
-        navigate(`/workspace/${wsId}/channels/${channelId}`);
-      }
-    }, 3000);
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-100 text-xl font-bold text-gray-700">
-        {!isInCall && (
-          <div className="animate-pulse bg-white p-6 rounded-lg shadow-lg mb-4">
-            <p>Call ended. Redirecting to chat...</p>
-          </div>
-        )}
-      </div>
-    );
+
+  // إذا مفيش مكالمة، ارجع للدردشة
+  if (!isInCall || !currentCall) {
+    navigate(`/workspace/${wsId}/channels/general`);
+    return null;
   }
 
   return (
     <Suspense fallback={<LoadingPage />}>
-      <CallLayout>
-        <div className="flex w-full h-[92vh]">
-          {/* Main Video Area */}
-          <div className="flex-1 flex flex-col items-center justify-between px-2 py-4">
-            {/* شبكة الفيديو باستخدام grid */}
-            <div className="w-full flex flex-col gap-4 mb-4">
-              {/* Main Speaker - Large Video */}
-              <div className="w-full flex justify-center">
-                <div className="w-full max-w-[600px] h-[400px] bg-gray-300 rounded-2xl flex flex-col items-center justify-center font-bold text-xl text-gray-700 shadow-lg relative overflow-hidden">
-                  {/* Profile Image */}
-                  <div className="w-32 h-32 rounded-full bg-gray-400 mb-4 flex items-center justify-center">
-                    <img 
-                      src="https://randomuser.me/api/portraits/men/32.jpg" 
-                      alt={dummyUsers[0].name}
-                      className="w-full h-full rounded-full object-cover"
-                    />
-                  </div>
-                  <span className="text-white bg-black bg-opacity-30 px-3 py-1 rounded-lg">
-                    {dummyUsers[0].name}
-                  </span>
-                  {/* Recording Indicator */}
-                  <div className="absolute top-4 left-4 flex items-center gap-2 bg-black bg-opacity-50 px-3 py-1 rounded-full">
-                    <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
-                    <span className="text-white text-sm">Recording</span>
-                  </div>
-                  {/* Mic Status */}
-                  <div className="absolute bottom-4 right-4 p-2 bg-black bg-opacity-50 rounded-full">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
-                      <path d="M13.5727 6.42725H7.50248H7.22656V10.681L9.70982 13.4155H11.3653L13.5727 10.9848V6.42725Z" fill="white" fillOpacity="0.8" />
-                      <path d="M10.3996 13.0125C12.1527 13.0125 13.5727 11.5691 13.5727 9.78709V5.3522C13.5727 3.57018 12.1527 2.12683 10.3996 2.12683C8.6465 2.12683 7.22656 3.57018 7.22656 5.3522V9.78709C7.22656 11.5691 8.6465 13.0125 10.3996 13.0125Z" stroke="white" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  </div>
-                </div>
-              </div>
-              
-              {/* باقي المستخدمين في شبكة grid */}
-              <div className="w-full grid grid-cols-4 gap-3 justify-items-center">
-                {dummyUsers.slice(1, 5).map((user, index) => (
-                  <div
-                    key={user.id}
-                    className="w-full max-w-[140px] h-[90px] bg-gray-200 rounded-xl flex flex-col items-center justify-center font-bold text-sm text-gray-700 shadow relative overflow-hidden"
-                  >
-                    {/* Profile Image for small videos */}
-                    <div className="w-12 h-12 rounded-full bg-gray-400 mb-1 flex items-center justify-center">
-                      <img 
-                        src={`https://randomuser.me/api/portraits/${index % 2 === 0 ? 'women' : 'men'}/${40 + index}.jpg`}
-                        alt={user.name}
-                        className="w-full h-full rounded-full object-cover"
-                      />
-                    </div>
-                    <span className="text-xs text-center px-1">{user.name}</span>
-                    
-                    {/* Corner indicators */}
-                    <div className="absolute top-1 right-1 p-1 bg-black bg-opacity-50 rounded-full">
-                      <button onClick={() => toggleUserMic(user.id)}>
-                        {userMics[user.id] ? (
-                          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 20 20" fill="none">
-                            <path d="M13.5727 6.42725H7.50248H7.22656V10.681L9.70982 13.4155H11.3653L13.5727 10.9848V6.42725Z" fill="white" fillOpacity="0.8" />
-                          </svg>
-                        ) : (
-                          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none">
-                            <path d="M16 6.3V6C16 3.79 14.21 2 12 2C9.79 2 8 3.79 8 6V11" stroke="#EB5757" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                            <path d="M20.0697 2.83997L3.92969 18.99" stroke="#EB5757" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                          </svg>
-                        )}
-                      </button>
-                    </div>
-                  </div>
-                ))}
+      <CallLayout showHeader={true}>
+        <div className="w-full h-full flex flex-col items-center justify-center bg-gray-900 text-white relative">
+          {/* Call Info */}
+          <div className="absolute top-8 left-1/2 transform -translate-x-1/2 text-center">
+            <h2 className="text-xl font-semibold">{currentCall.title}</h2>
+            <p className="text-gray-300 text-sm">
+              {currentCall.type === 'audio' ? 'Voice Call' : 'Video Call'}
+            </p>
+          </div>
+
+          {/* Main Video/Audio Area */}
+          <div className="flex-1 flex items-center justify-center">
+            <div className="w-80 h-80 bg-gray-800 rounded-full flex items-center justify-center">
+              <div className="w-24 h-24 bg-gray-600 rounded-full flex items-center justify-center">
+                <span className="text-4xl">👤</span>
               </div>
             </div>
-            {/* Controls */}
-            <CallControls
-              isMicOn={isMicOn}
-              isCamOn={isCamOn}
-              onToggleMic={() => setIsMicOn((prev) => !prev)}
-              onToggleCam={() => setIsCamOn((prev) => !prev)}
-              onEndCall={() => setIsInCall(false)}
-              onToggleChat={() => setShowChatSidebar((prev) => !prev)}
-            />
           </div>
-          {/* Sidebar: Members + Chat (يمين) */}
-          <CallSidebar
-            showChatSidebar={showChatSidebar}
-            setShowChatSidebar={setShowChatSidebar}
-            dummyMembers={dummyMembers}
-            dummyMessages={dummyMessages}
-          />
+
+          {/* Call Controls */}
+          <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex gap-4">
+            {/* Microphone Toggle */}
+            <button
+              onClick={() => setIsMicOn(!isMicOn)}
+              className={`p-4 rounded-full transition ${
+                isMicOn ? 'bg-gray-700 hover:bg-gray-600' : 'bg-red-600 hover:bg-red-700'
+              }`}
+            >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+                <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+              </svg>
+            </button>
+
+            {/* Camera Toggle */}
+            {currentCall.type === 'video' && (
+              <button
+                onClick={() => setIsCamOn(!isCamOn)}
+                className={`p-4 rounded-full transition ${
+                  isCamOn ? 'bg-gray-700 hover:bg-gray-600' : 'bg-red-600 hover:bg-red-700'
+                }`}
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/>
+                </svg>
+              </button>
+            )}
+
+            {/* End Call */}
+            <button
+              onClick={handleEndCall}
+              className="p-4 rounded-full bg-red-600 hover:bg-red-700 transition"
+            >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 9c-1.6 0-3.15.25-4.6.72v3.1c0 .39-.23.74-.56.9-.98.49-1.87 1.12-2.66 1.85-.18.18-.43.28-.7.28-.28 0-.53-.11-.71-.29L.29 13.08c-.18-.17-.29-.42-.29-.7 0-.28.11-.53.29-.71C3.34 8.78 7.46 7 12 7s8.66 1.78 11.71 4.67c.18.18.29.43.29.71 0 .28-.11.53-.29.7l-2.48 2.48c-.18.18-.43.29-.71.29-.27 0-.52-.1-.7-.28-.79-.73-1.68-1.36-2.66-1.85-.33-.16-.56-.51-.56-.9v-3.1C15.15 9.25 13.6 9 12 9z"/>
+              </svg>
+            </button>
+
+            {/* Chat Toggle */}
+            <button
+              onClick={() => setShowChatSidebar(!showChatSidebar)}
+              className="p-4 rounded-full bg-gray-700 hover:bg-gray-600 transition"
+            >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M20 2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h4l4 4 4-4h4c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
+              </svg>
+            </button>
+          </div>
+
+          {/* Call Duration */}
+          <div className="absolute top-8 right-8 text-gray-300">
+            <span className="text-sm">00:00</span>
+          </div>
         </div>
       </CallLayout>
     </Suspense>

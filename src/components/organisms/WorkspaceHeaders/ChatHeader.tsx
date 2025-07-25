@@ -2,6 +2,8 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { InputSearch } from "../../atoms/input/Input";
 import { GoArrowLeft, GoArrowRight } from "react-icons/go";
 import { useWorkspaceParams } from "../../../hooks/useWorkspace/useWorkspaceParams";
+import { useCall } from "../../../hooks/useCall/useCall";
+import * as callApi from "../../../services/api/call/callApi";
 
 type ChatHeaderProps = {
   onOpenThreadSidebar: () => void;
@@ -17,12 +19,28 @@ const ChatHeader = ({
   const navigate = useNavigate();
   const location = useLocation();
   const { workspaceId } = useWorkspaceParams();
-
+  const { createCall, isInCall, isLoading } = useCall();
+  
   // If no workspace ID, default to a fallback
-  const wsId = workspaceId || "default";
-  const isInCallPage =
-    location.pathname.includes(`/workspace/${wsId}/channels/`) &&
-    location.pathname.includes("/call");
+  const wsId = workspaceId || 'default';
+  const isInCallPage = location.pathname.includes(`/workspace/${wsId}/channels/`) && location.pathname.includes('/call');
+
+  const handleStartCall = async (type: 'voice' | 'video') => {
+    if (!wsId) return;
+    
+    try {
+      const callData: callApi.CreateCallData = {
+        title: type === 'voice' ? 'Voice Call' : 'Video Call',
+        type: type === 'voice' ? 'audio' : 'video',
+        channelId: 'general',
+      };
+      
+      await createCall(wsId, callData);
+      navigate(`/workspace/${wsId}/channels/general/call`);
+    } catch (error) {
+      console.error('Failed to start call:', error);
+    }
+  };
 
   return (
     <div className="flex items-center justify-between px-4 py-3 bg-white border-b border-gray-100">
@@ -41,18 +59,17 @@ const ChatHeader = ({
         <span className="mx-1 text-gray-400 text-xs">/</span>
         <span className="text-sm text-gray-700">General</span>
       </div>
-
+      
       {/* Right: Actions */}
       <div className="flex items-center gap-3">
         {/* Call Buttons - Hidden during call */}
-        {!isInCallPage && (
+        {!isInCallPage && !isInCall && (
           <>
             {/* Voice Call Button */}
             <button
-              onClick={() => {
-                navigate(`/workspace/${wsId}/channels/general/call`);
-              }}
-              className="p-2 rounded-full transition hover:bg-gray-100 text-gray-600 hover:text-gray-800"
+              onClick={() => handleStartCall('voice')}
+              disabled={isLoading}
+              className="p-2 rounded-full transition hover:bg-gray-100 text-gray-600 hover:text-gray-800 disabled:opacity-50"
               title="Start voice call"
             >
               <svg
@@ -73,10 +90,9 @@ const ChatHeader = ({
 
             {/* Video Call Button */}
             <button
-              onClick={() => {
-                navigate(`/workspace/${wsId}/channels/general/call`);
-              }}
-              className="p-2 rounded-full transition hover:bg-gray-100 text-gray-600 hover:text-gray-800"
+              onClick={() => handleStartCall('video')}
+              disabled={isLoading}
+              className="p-2 rounded-full transition hover:bg-gray-100 text-gray-600 hover:text-gray-800 disabled:opacity-50"
               title="Start video call"
             >
               <svg
@@ -98,7 +114,7 @@ const ChatHeader = ({
         )}
 
         {/* In Call Indicator - Show during call */}
-        {isInCallPage && (
+        {(isInCallPage || isInCall) && (
           <div className="flex items-center gap-2 px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm">
             <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
             In Call
