@@ -12,14 +12,26 @@ import {
   changePassword,
   fetchMe,
   logout as logoutApi,
-  loginWithGoogle
+  loginWithGoogle as googleLogin
 } from "../../services/api/auth/authApi";
 import type {
-  User,
   LoginData,
   CompleteLoginData,
   RegisterData
 } from "../../services/api/auth/authApi";
+
+// Extend User type to include all required properties for Google login
+export type User = {
+  id: string;
+  email: string;
+  name: string;
+  avatar?: string;
+  isVerified?: boolean;
+  role?: string;
+  status?: string;
+  createdAt?: string;
+  updatedAt?: string;
+};
 
 interface AuthState {
   isAuthenticated: boolean;
@@ -189,14 +201,14 @@ export const logoutAsync = createAsyncThunk(
   }
 );
 
-export const loginWithGoogleAsync = createAsyncThunk(
+export const loginWithGoogleThunk = createAsyncThunk(
   'auth/loginWithGoogle',
-  async (_, { rejectWithValue }) => {
+  async (googleCredential: string, { rejectWithValue }) => {
     try {
-      await loginWithGoogle();
-      return true;
+      const response = await googleLogin(googleCredential);
+      return response.data; // بيانات المستخدم والـ token
     } catch (error: any) {
-      return rejectWithValue(error.message || 'فشل في تسجيل الدخول بجوجل');
+      return rejectWithValue(error.response?.data?.message || error.message);
     }
   }
 );
@@ -213,7 +225,7 @@ const authSlice = createSlice({
     setTokens: (state, action: PayloadAction<{ accessToken: string; refreshToken?: string }>) => {
       state.accessToken = action.payload.accessToken;
       if (action.payload.refreshToken) {
-        state.refreshToken = action.payload.refreshToken;
+        state.refreshToken = action.payload.refreshToken ?? null;
       }
       localStorage.setItem('accessToken', action.payload.accessToken);
       if (action.payload.refreshToken) {
@@ -247,6 +259,21 @@ const authSlice = createSlice({
       localStorage.removeItem('accessToken');
       localStorage.removeItem('refreshToken');
       localStorage.removeItem('user');
+    },
+    // ✅ إضافة action لاستعادة auth state
+    setAuthData: (state, action) => {
+      state.user = action.payload.user;
+      state.accessToken = action.payload.accessToken;
+      state.refreshToken = action.payload.refreshToken;
+      state.isAuthenticated = action.payload.isAuthenticated;
+      state.error = null;
+    },
+    clearAuthData: (state) => {
+      state.user = null;
+      state.accessToken = null;
+      state.refreshToken = null;
+      state.isAuthenticated = false;
+      state.error = null;
     }
   },
   extraReducers: (builder) => {
@@ -395,6 +422,24 @@ const authSlice = createSlice({
       .addCase(verifyEmailAsync.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
+      })
+
+      // ✅ إضافة حالات Google login
+      .addCase(loginWithGoogleThunk.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(loginWithGoogleThunk.fulfilled, (state, action) => {
+        state.loading = false;
+        state.user = action.payload.user;
+        state.accessToken = action.payload.accessToken;
+        state.isAuthenticated = true;
+        state.error = null;
+      })
+      .addCase(loginWithGoogleThunk.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+        state.isAuthenticated = false;
       });
   }
 });
@@ -405,7 +450,9 @@ export const {
   clearError, 
   resetLoginFlow, 
   resetPasswordFlow, 
-  logout 
+  logout,
+  setAuthData,
+  clearAuthData
 } = authSlice.actions;
 
 export default authSlice.reducer;

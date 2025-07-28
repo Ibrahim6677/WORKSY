@@ -1,14 +1,16 @@
-import { useState, useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import type { RootState, AppDispatch } from '../../store/store';
+import { fetchWorkspaceChannels, createNewChannel, leaveChannelThunk } from "../../features/chat/chatSlice";
 import { Lock, Plus, X, LogOut } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useWorkspaceParams } from "../../hooks/useWorkspace/useWorkspaceParams";
-import { fetchWorkspaceChannels, createNewChannel, leaveChannelThunk } from "../../features/chat/chatSlice";
-import type { AppDispatch, RootState } from "../../store/store";
 
-export default function MainChannels() {
+const MainChannels = () => {
+  const { workspaceId } = useParams();
   const dispatch = useDispatch<AppDispatch>();
-  const { workspaceId } = useWorkspaceParams();
+  const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState("All");
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [hoveredChannel, setHoveredChannel] = useState<string | null>(null);
@@ -18,12 +20,6 @@ export default function MainChannels() {
     type: "public" as "public" | "private"
   });
 
-  const { channels, loading, error } = useSelector((state: RootState) => ({
-    channels: state.chat.channels,
-    loading: state.chat.loading,
-    error: state.chat.error
-  }));
-
   // Fetch channels when component mounts or workspace changes
   useEffect(() => {
     if (workspaceId) {
@@ -31,10 +27,29 @@ export default function MainChannels() {
     }
   }, [dispatch, workspaceId]);
 
-  const filteredChannels =
-    typeFilter === "All"
-      ? channels
-      : channels.filter((c) => c.type === typeFilter.toLowerCase());
+  const channelsState = useSelector((state: RootState) => state.channel);
+  const { 
+    channels = [], 
+    loading = false, 
+    error = null 
+  } = channelsState || {};
+
+  // Filter channels based on search query and type
+  let filteredChannels: any[] = [];
+  
+  try {
+    if (Array.isArray(channels)) {
+      filteredChannels = channels.filter((channel: any) => 
+        channel?.name?.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    } else {
+      console.warn('⚠️ channels is not an array, defaulting to empty array');
+      filteredChannels = [];
+    }
+  } catch (error) {
+    console.error('❌ Error filtering channels:', error);
+    filteredChannels = [];
+  }
 
   const handleCreateChannel = async () => {
     if (!workspaceId || !createChannelData.name.trim()) return;
@@ -72,127 +87,133 @@ export default function MainChannels() {
     }
   };
 
+  // Loading state
   if (loading) {
     return (
-      <div className="max-w-[1255px] p-8">
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading channels...</p>
         </div>
       </div>
     );
   }
 
+  // Error state
   if (error) {
     return (
-      <div className="max-w-[1255px] p-8">
-        <div className="text-red-600 text-center">
-          <p>Error loading channels: {error}</p>
-          <button 
-            onClick={() => workspaceId && dispatch(fetchWorkspaceChannels(workspaceId))}
-            className="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-          >
-            Retry
-          </button>
+      <div className="flex flex-col items-center justify-center min-h-screen">
+        <h2 className="text-2xl font-bold text-red-600 mb-4">Error Loading Channels</h2>
+        <p className="text-gray-600 mb-4">{error}</p>
+        <button 
+          onClick={() => window.location.reload()} 
+          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+        >
+          Try Again
+        </button>
+      </div>
+    );
+  }
+
+  // Final check for data type
+  if (!Array.isArray(filteredChannels)) {
+    console.error('❌ CRITICAL: filteredChannels is not an array!');
+    console.error('❌ filteredChannels value:', filteredChannels);
+    console.error('❌ filteredChannels type:', typeof filteredChannels);
+    
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen">
+        <h2 className="text-2xl font-bold text-red-600 mb-4">Data Format Error</h2>
+        <div className="text-sm text-gray-600 mb-4 space-y-1">
+          <p>Expected: Array</p>
+          <p>Got: {typeof filteredChannels}</p>
+          <p>Value: {JSON.stringify(filteredChannels)}</p>
         </div>
+        <button 
+          onClick={() => window.location.reload()} 
+          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+        >
+          Reload Page
+        </button>
       </div>
     );
   }
 
   return (
-    <div className="max-w-[1255px] p-8">
-      {/* Header with Create Button */}
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-semibold text-gray-900">Channels</h1>
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-        >
-          <Plus size={20} />
-          Create Channel
-        </button>
-      </div>
-
-      {/* Filters */}
-      <div className="flex gap-4 mb-4">
-        <select
-          className="border border-gray-300 rounded px-3 py-1 text-sm"
-          value="All"
-          disabled
-        >
-          <option value="All">All</option>
-        </select>
-
-        <select
-          className="border border-gray-300 rounded px-3 py-1 text-sm"
-          value={typeFilter}
-          onChange={(e) => setTypeFilter(e.target.value)}
-        >
-          <option value="All">Type</option>
-          <option value="public">Public</option>
-          <option value="private">Private</option>
-        </select>
-      </div>
-
-      {/* Channel List */}
-      <div className="border border-[#A1A1A1] rounded-md shadow bg-[#E2E2E2] mr-20 pb-8">
-        {filteredChannels.length === 0 ? (
-          <div className="flex items-center justify-center p-8">
-            <div className="text-center">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                No channels found
-              </h3>
-              <p className="text-gray-600">
-                {typeFilter === "All" 
-                  ? "No channels have been created yet." 
-                  : `No ${typeFilter.toLowerCase()} channels found.`
-                }
-              </p>
-            </div>
+    <div className="p-6 max-w-4xl mx-auto">
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold mb-4">Channels</h1>
+        
+        {/* Search Bar */}
+        <div className="relative mb-4">
+          <input
+            type="text"
+            placeholder="Search channels..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full px-4 py-2 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+          />
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
           </div>
-        ) : (
-          filteredChannels.map((channel) => (
-            <div
-              key={channel.id}
-              className="relative flex items-center gap-3 px-6 py-4 hover:bg-[#B1B1B1] transition duration-300 group"
-              onMouseEnter={() => setHoveredChannel(channel.id)}
-              onMouseLeave={() => setHoveredChannel(null)}
-            >
-              <div className="text-gray-600 text-xl">
-                {channel.type === "public" ? "#" : <Lock size={18} />}
-              </div>
-              <div className="flex flex-col flex-1">
-                <span className="font-medium text-gray-800">{channel.name}</span>
-                <Link 
-                  to={`/workspace/${workspaceId}/channels/${channel.id}`} 
-                  className="text-green-600 cursor-pointer text-sm hover:underline"
-                >
-                  joined
-                </Link>
-                <span className="text-sm text-gray-500">
-                  {channel.members.length} members
-                </span>
-                {channel.description && (
-                  <span className="text-sm text-gray-400 mt-1">
-                    {channel.description}
-                  </span>
-                )}
-              </div>
-              
-              {/* Leave Button - Show on Hover */}
-              {hoveredChannel === channel.id && (
-                <button
-                  onClick={() => handleLeaveChannel(channel.id, channel.name)}
-                  className="absolute right-6 top-1/2 transform -translate-y-1/2 flex items-center gap-1 px-3 py-1 bg-red-500 text-white text-sm rounded hover:bg-red-600 transition-colors"
-                  title="Leave Channel"
-                >
-                  <LogOut size={14} />
-                  Leave
-                </button>
-              )}
-            </div>
-          ))
-        )}
+        </div>
       </div>
+
+      {/* Channels List */}
+      {filteredChannels.length === 0 ? (
+        <div className="text-center py-16">
+          <div className="text-gray-300 text-8xl mb-6">💬</div>
+          <h3 className="text-2xl font-bold text-gray-700 mb-3">
+            {searchQuery ? 'No Channels Found' : 'No Channels Available'}
+          </h3>
+          <p className="text-gray-500 mb-8">
+            {searchQuery 
+              ? `No channels match "${searchQuery}"`
+              : 'Create your first channel to start communicating with your team!'
+            }
+          </p>
+          {!searchQuery && (
+            <button className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors">
+              Create Channel
+            </button>
+          )}
+        </div>
+      ) : (
+        <div className="grid gap-4">
+          {Array.isArray(filteredChannels) && filteredChannels.map((channel: any, index: number) => (
+            <div
+              key={channel?.id || `channel-${index}`}
+              className="bg-white border border-gray-200 p-6 rounded-lg hover:shadow-md transition-shadow cursor-pointer"
+              onClick={() => {
+                console.log('Opening channel:', channel?.name);
+              }}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                    <span className="text-purple-600 font-bold">
+                      #{channel?.name?.charAt(0) || 'C'}
+                    </span>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      #{channel?.name || 'Unnamed Channel'}
+                    </h3>
+                    <p className="text-gray-600 text-sm">
+                      {channel?.description || 'No description available'}
+                    </p>
+                  </div>
+                </div>
+                <div className="text-sm text-gray-500">
+                  {channel?.memberCount || 0} members
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Create Channel Modal */}
       {showCreateModal && (
@@ -270,4 +291,6 @@ export default function MainChannels() {
       )}
     </div>
   );
-}
+};
+
+export default MainChannels;

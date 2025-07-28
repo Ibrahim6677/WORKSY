@@ -5,11 +5,10 @@ import type { RootState, AppDispatch } from "../../store/store";
 import { loginAsync } from "../../features/auth/authSlice";
 import imgLogin from "../../assets/images/Delivery _ order, account, transportation, subway, box, shopping.png";
 import logo from "../../assets/images/Vector1.svg";
-import googleIcon from "../../assets/images/Group.svg";
 import micIcon from "../../assets/images/Group9.svg";
 import Input, { InputSubmit } from "../../components/atoms/input/Input";
 import { useAuth } from "../../hooks/useAuth/useAuth";
-import { loginWithGoogle } from "../../services/api/auth/authApi";
+import GoogleButton from "../../components/atoms/Bottom/GoogleButton";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -17,12 +16,14 @@ const Login = () => {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const { isAuthenticated } = useAuth();
+  
+  const { isAuthenticated, loading: authLoading } = useAuth();
   const { loading, error } = useSelector((state: RootState) => state.auth);
 
   useEffect(() => {
     if (isAuthenticated) {
-      navigate("/workspace")
+      console.log('✅ User already authenticated, redirecting to workspace...');
+      navigate("/workspace");
     }
   }, [isAuthenticated, navigate]);
 
@@ -30,8 +31,11 @@ const Login = () => {
     e.preventDefault();
     
     try {
+      console.log('📧 Regular login attempt for:', email);
+      
       const result = await dispatch(loginAsync({ email, password })).unwrap();
-      // بعد نجاح login، سيتم تحديث sessionToken في Redux
+      
+      console.log('✅ Regular login successful, navigating to verify...');
       navigate("/verify", { 
         state: { 
           from: "login", 
@@ -40,10 +44,20 @@ const Login = () => {
         } 
       });
     } catch (err: any) {
-      // الخطأ سيكون متاح في Redux state
-      console.error("Login failed:", err);
+      console.error("❌ Regular login failed:", err);
     }
   };
+
+  if (authLoading || isAuthenticated) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Checking authentication...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col lg:flex-row items-center justify-center w-full min-h-screen px-4 py-8 gap-8">
@@ -62,6 +76,7 @@ const Login = () => {
             Enter your email address
           </p>
 
+          {/* ✅ نموذج تسجيل الدخول العادي */}
           <form onSubmit={handleSubmit} className="w-full space-y-2 max-w-md mx-auto">
             <Input
               type="email"
@@ -69,6 +84,7 @@ const Login = () => {
               placeholder="name@work.com"
               value={email}
               onChange={(e: any) => setEmail(e.target.value)}
+              required
             />
             <Input
               type="password"
@@ -76,55 +92,63 @@ const Login = () => {
               placeholder="Password"
               value={password}
               onChange={(e: any) => setPassword(e.target.value)}
+              required
             />
 
             <Link
               to="/forget-password"
-              className="text-sm text-[#a38bd2] underline mt-2 text-left"
+              className="text-sm text-[#a38bd2] underline mt-2 text-left inline-block"
             >
               Forget your password?
             </Link>
 
+            {/* ✅ عرض رسائل الخطأ */}
             {error && (
-              <p className="text-red-500 text-sm mt-2">{error}</p>
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+                {error}
+              </div>
             )}
 
             <InputSubmit
               type="submit"
-              value={loading ? "Loading..." : "Get Started"}
-              className="bg-[#6629DE] text-white rounded-2xl w-full mt-4 py-3 cursor-pointer hover:opacity-90 transition duration-300"
+              value={loading ? "Signing in..." : "Get Started"}
+              className="bg-[#6629DE] text-white rounded-2xl w-full mt-4 py-3 cursor-pointer hover:opacity-90 transition duration-300 disabled:opacity-50"
               disabled={loading}
             />
           </form>
 
           <div className="text-sm text-gray-500 mt-3 text-center">
             Create a new account?
-            <Link to="/register" className="text-[#a38bd2] underline ml-1">
+            <Link to="/register" className="text-[#a38bd2] underline ml-1 hover:text-[#8b5bd9]">
               Sign up
             </Link>
           </div>
 
+          {/* ✅ فاصل "OR" */}
           <div className="flex items-center w-full mt-6 mb-2">
             <div className="flex-grow h-px bg-gray-300"></div>
             <span className="px-4 text-sm text-gray-500">OR</span>
             <div className="flex-grow h-px bg-gray-300"></div>
           </div>
 
-          <div className="flex flex-col items-center">
-            <button
-              className="flex items-center justify-center gap-2 border border-[#E5E5E5] rounded-full w-[90%] sm:w-[300px] h-[50px] bg-white mb-4 hover:shadow-md"
-              onClick={loginWithGoogle}
+          {/* ✅ أزرار تسجيل الدخول بالمنصات الاجتماعية */}
+          <div className="flex flex-col items-center space-y-3">
+            {/* Google Login Button */}
+            <div className="w-[90%] sm:w-[300px]">
+              <GoogleButton />
+            </div>
+            
+            {/* Microsoft Login Button (مُعطّل مؤقتاً) */}
+            <button 
+              className="flex items-center justify-center gap-2 border border-[#E5E5E5] rounded-full w-[90%] sm:w-[300px] h-[50px] bg-white hover:shadow-md transition-shadow opacity-50 cursor-not-allowed"
+              disabled
+              title="Coming soon"
             >
-              <img src={googleIcon} alt="" />
-              <span className="text-[#444] text-sm font-medium">
-                Sign In With Google
-              </span>
-            </button>
-            <button className="flex items-center justify-center gap-2 border border-[#E5E5E5] rounded-full w-[90%] sm:w-[300px] h-[50px] bg-white mb-2 hover:shadow-md">
-              <img src={micIcon} alt="" />
+              <img src={micIcon} alt="Microsoft" />
               <span className="text-[#444] text-sm font-medium">
                 Sign In With Microsoft
               </span>
+              <span className="text-xs text-gray-400 ml-2">(Soon)</span>
             </button>
           </div>
         </section>
@@ -132,7 +156,11 @@ const Login = () => {
 
       {/* Right - Login Illustration */}
       <div className="hidden lg:block w-full max-w-sm">
-        <img src={imgLogin} className="w-full h-auto object-contain" alt="Login Illustration" />
+        <img 
+          src={imgLogin} 
+          className="w-full h-auto object-contain" 
+          alt="Login Illustration" 
+        />
       </div>
     </div>
   );

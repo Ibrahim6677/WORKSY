@@ -9,7 +9,6 @@ const Login = lazy(() => import("../pages/auth/Login"));
 const Register = lazy(() => import("../pages/auth/Register"));
 const ResetPassword = lazy(() => import("../pages/auth/ResetPassword"));
 const Verify = lazy(() => import("../pages/auth/Verify"));
-const GoogleAuthCallback = lazy(() => import("../pages/auth/GoogleAuthCallback"));
 
 const AuthRoutes: RouteObject = {
   element: (
@@ -23,7 +22,6 @@ const AuthRoutes: RouteObject = {
     { path: "/forget-password", element: <Suspense fallback={<LoadingPage />}><ForgetPassword /></Suspense> },
     { path: "/reset-password", element: <Suspense fallback={<LoadingPage />}><ResetPassword /></Suspense> },
     { path: "/verify", element: <Suspense fallback={<LoadingPage />}><Verify /></Suspense> },
-    { path: "/google/callback", element: <Suspense fallback={<LoadingPage />}><GoogleAuthCallback /></Suspense> },
   ],
 };
 
